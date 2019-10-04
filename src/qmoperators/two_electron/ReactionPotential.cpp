@@ -170,11 +170,6 @@ void ReactionPotential::setup(double prec) {
     QMFunction rho_eff_func;
     QMFunction V_tot_func;
 
-    mrcpp::FunctionTreeVector<3> d_cavity;
-    cavity_func.alloc(NUMBER::Real);
-    mrcpp::build_grid(cavity_func.real(), *cavity);
-    qmfunction::project(cavity_func, *cavity, NUMBER::Real, prec / 100);
-
     Cavity &C_tmp = *this->cavity;
     double eps_i = this->e_i, eps_o = this->e_o;
 
@@ -198,12 +193,16 @@ void ReactionPotential::setup(double prec) {
         setRhoEff(rho_eff_func, eps);
     }
 
-    d_cavity = mrcpp::gradient(*derivative, cavity_func.real());
-
     V_vac_func.alloc(NUMBER::Real);
     mrcpp::apply(prec, V_vac_func.real(), *poisson, rho_tot.real());
 
     if (not temp.hasReal()) {
+
+        cavity_func.alloc(NUMBER::Real);
+        mrcpp::build_grid(cavity_func.real(), *cavity);
+        qmfunction::project(cavity_func, *cavity, NUMBER::Real, prec / 100);
+        this->d_cavity = mrcpp::gradient(*derivative, cavity_func.real());
+
         QMFunction zeroth_poisson;
         zeroth_poisson.alloc(NUMBER::Real);
         gamma.alloc(NUMBER::Real);
@@ -242,7 +241,7 @@ void ReactionPotential::setup(double prec) {
     qmfunction::add(V_tot_func, 1.0, temp, 1.0, V_vac_func, -1.0);
     setGamma(inv_eps_func, gammanp1, V_tot_func, d_cavity);
 
-    mrcpp::clear(d_cavity, true);
+    // mrcpp::clear(d_cavity, true);
 }
 
 double &ReactionPotential::getTotalEnergy() {
@@ -278,7 +277,7 @@ void ReactionPotential::clear() {
     rho_tot.free(NUMBER::Real);
     rho_el.free(NUMBER::Real);
     rho_nuc.free(NUMBER::Real);
-    cavity_func.free(NUMBER::Real);
+    // cavity_func.free(NUMBER::Real);
     // QMFunction::free(NUMBER::Total);
 }
 

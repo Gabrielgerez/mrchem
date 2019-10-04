@@ -51,6 +51,8 @@ private:
     Density rho_nuc;
     QMFunction cavity_func;
 
+    mrcpp::FunctionTreeVector<3> d_cavity;
+
     QMFunction gamma;
     QMFunction gammanp1;
 
