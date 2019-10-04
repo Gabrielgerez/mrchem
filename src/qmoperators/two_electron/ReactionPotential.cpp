@@ -203,7 +203,7 @@ void ReactionPotential::setup(double prec) {
     V_vac_func.alloc(NUMBER::Real);
     mrcpp::apply(prec, V_vac_func.real(), *poisson, rho_tot.real());
 
-    if (false) { //(not temp.hasReal()) {
+    if (not temp.hasReal()) {
         QMFunction zeroth_poisson;
         zeroth_poisson.alloc(NUMBER::Real);
         gamma.alloc(NUMBER::Real);
