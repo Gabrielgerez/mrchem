@@ -30,14 +30,11 @@
 #include <cmath>
 #include <vector>
 
-using namespace mrcpp;
-
 namespace mrchem {
 
 class Cavity final : public mrcpp::RepresentableFunction<3> {
 public:
     Cavity(std::vector<mrcpp::Coord<3>> &coords, std::vector<double> &R, double slope);
-    Cavity(const std::vector<std::string> &coord_str, double slope, bool atom_based_cavity = true);
     double evalf(const mrcpp::Coord<3> &r) const override;
 
     std::vector<mrcpp::Coord<3>> getCoordinates() { return pos; }
@@ -47,11 +44,8 @@ public:
 protected:
     std::vector<mrcpp::Coord<3>> pos;
     std::vector<double> R;
-    std::vector<double> alpha;
     double d;
-    bool abc;
 
-    void readCoordinateString(const std::vector<std::string> &coord_str);
     bool isVisibleAtScale(int scale, int nQuadPts) const;
     bool isZeroOnInterval(const double *a, const double *b) const;
 };

@@ -1,33 +1,22 @@
-#include "MRCPP/Gaussians"
-#include "MRCPP/MWOperators"
-#include "MRCPP/Plotter"
-#include <cmath>
-#include <functional>
-
 #include "ReactionPotential.h"
-#include "chemistry/Cavity.h"
-#include "chemistry/Nucleus.h"
+#include "MRCPP/MWOperators"
+#include "MRCPP/Printer"
+#include "MRCPP/Timer"
 #include "chemistry/chemistry_utils.h"
-#include "qmfunctions/Density.h"
-#include "qmfunctions/Orbital.h"
 #include "qmfunctions/density_utils.h"
-#include "qmfunctions/orbital_utils.h"
 #include "qmfunctions/qmfunction_utils.h"
-#include "scf_solver/KAIN.h"
 
-using mrcpp::ABGVOperator;
-using mrcpp::FunctionTree;
-using mrcpp::PoissonOperator;
+using mrcpp::Printer;
+using mrcpp::Timer;
 
-using PoissonOperator = mrcpp::PoissonOperator;
 using PoissonOperator_p = std::shared_ptr<mrcpp::PoissonOperator>;
-using DerivativeOperator = mrcpp::DerivativeOperator<3>;
 using DerivativeOperator_p = std::shared_ptr<mrcpp::DerivativeOperator<3>>;
 using Cavity_p = std::shared_ptr<mrchem::Cavity>;
 using OrbitalVector_p = std::shared_ptr<mrchem::OrbitalVector>;
 
 namespace mrchem {
 extern mrcpp::MultiResolutionAnalysis<3> *MRA; // Global MRA
+
 // change input of the potential to molecule, so that we get the density, Nuclei and cavity all from it
 // make a dielectric function class which contains: eps_i, eps_o, is_lin and the cavity, but setCavity in
 // ReactionPotential
@@ -101,9 +90,7 @@ void ReactionPotential::accelerateConvergence(QMFunction &diff_func, QMFunction 
     phi_n[0].QMFunction::operator=(temp);
     dPhi_n[0].QMFunction::operator=(diff_func);
 
-    // double plevel = TelePrompter::setPrintLevel(-1);
     kain.accelerate(this->apply_prec, phi_n, dPhi_n);
-    // TelePrompter::setPrintLevel(plevel);
 
     temp.QMFunction::operator=(phi_n[0]);
     diff_func.QMFunction::operator=(dPhi_n[0]);
@@ -155,7 +142,7 @@ void ReactionPotential::SCRF(QMFunction *V_tot_func,
         V_np1_func.free(NUMBER::Real);
         qmfunction::add(V_np1_func, 1.0, temp, 1.0, diff_func, -1.0);
         temp = V_np1_func;
-        std::cout << "error:\t" << error << "\n"
+        std::cout << "error:\t" << error << "\n" // replacing with printer soon
                   << "iter.:\t" << iter << std::endl;
         iter++;
     }
@@ -185,7 +172,7 @@ void ReactionPotential::setup(double prec) {
         this->d_coefficient = e_i - e_o;
         setRhoEff(rho_eff_func, eps);
 
-    } else if (not is_lin) {
+    } else {
         auto eps = [C_tmp, eps_i, eps_o](const mrcpp::Coord<3> &r) {
             return eps_i * std::exp(std::log(eps_o / eps_i) * (1 - C_tmp.evalf(r)));
         };
@@ -240,8 +227,6 @@ void ReactionPotential::setup(double prec) {
 
     qmfunction::add(V_tot_func, 1.0, temp, 1.0, V_vac_func, -1.0);
     setGamma(inv_eps_func, gammanp1, V_tot_func, d_cavity);
-
-    // mrcpp::clear(d_cavity, true);
 }
 
 double &ReactionPotential::getTotalEnergy() {
@@ -277,8 +262,6 @@ void ReactionPotential::clear() {
     rho_tot.free(NUMBER::Real);
     rho_el.free(NUMBER::Real);
     rho_nuc.free(NUMBER::Real);
-    // cavity_func.free(NUMBER::Real);
-    // QMFunction::free(NUMBER::Total);
 }
 
 } // namespace mrchem

@@ -58,15 +58,16 @@ private:
 
     int history;
 
-    double d_coefficient = std::log(e_i / e_o);
+    double d_coefficient = std::log(e_i / e_o); // factor with which rescale the derivative of the cavity function
     double electronicEnergy;
     double nuclearEnergy;
     double totalEnergy;
     double electronsIn;
-    double e_i;
-    double e_o;
-    bool is_lin;
-    bool variational;
+    double e_i;       // permitivity of free space, 1 inside the cavity
+    double e_o;       // dielectric constant characteristic of the solvent
+    bool is_lin;      // determines if the dielectric function will be implemented linearly or exponentially
+    bool variational; // determines if the Reaction potential will be optimized in its own loop each SCF iteration or if
+                      // it will converge together with the SCF procedure
 
     void setRhoEff(QMFunction &rho_eff_func, std::function<double(const mrcpp::Coord<3> &r)> eps);
     void setGamma(QMFunction const &inv_eps_func,

@@ -1,8 +1,6 @@
 #pragma once
 
 #include "ReactionPotential.h"
-//#include "ReactionPotentialD1.h"
-//#include "ReactionPotentialD2.h"
 #include "qmoperators/RankZeroTensorOperator.h"
 
 /** @class ReactionOperator
