@@ -7,8 +7,6 @@
 #include "qmoperators/one_electron/QMPotential.h"
 #include "scf_solver/KAIN.h"
 
-using namespace mrcpp;
-
 namespace mrchem {
 
 class ReactionPotential final : public QMPotential {
@@ -43,8 +41,8 @@ private:
     std::shared_ptr<Cavity> cavity;
     Nuclei nuclei;
     std::shared_ptr<OrbitalVector> orbitals;
-    std::shared_ptr<PoissonOperator> poisson;
-    std::shared_ptr<DerivativeOperator<3>> derivative;
+    std::shared_ptr<mrcpp::PoissonOperator> poisson;
+    std::shared_ptr<mrcpp::DerivativeOperator<3>> derivative;
 
     Density rho_tot;
     Density rho_el;

@@ -26,9 +26,6 @@
 #pragma once
 
 #include "MRCPP/MWFunctions"
-#include <array>
-#include <cmath>
-#include <vector>
 
 namespace mrchem {
 
@@ -37,16 +34,15 @@ public:
     Cavity(std::vector<mrcpp::Coord<3>> &coords, std::vector<double> &R, double slope);
     double evalf(const mrcpp::Coord<3> &r) const override;
 
-    std::vector<mrcpp::Coord<3>> getCoordinates() { return pos; }
-    std::vector<double> getRadius() { return R; }
-    void changeRadius(double r) { this->R[0] = r; }
+    std::vector<mrcpp::Coord<3>> &getCoordinates() { return pos; }
+    std::vector<double> &getRadius() { return R; }
 
 protected:
     std::vector<mrcpp::Coord<3>> pos;
     std::vector<double> R;
     double d;
 
-    bool isVisibleAtScale(int scale, int nQuadPts) const;
-    bool isZeroOnInterval(const double *a, const double *b) const;
+    bool isVisibleAtScale(int scale, int nQuadPts) const override;
+    bool isZeroOnInterval(const double *a, const double *b) const override;
 };
 } // namespace mrchem

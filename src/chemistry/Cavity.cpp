@@ -23,29 +23,22 @@
  * <https://mrchem.readthedocs.io/>
  */
 
-#include <array>
-#include <cmath>
-#include <vector>
-
 #include "Cavity.h"
-#include "PeriodicTable.h"
 #include "utils/math_utils.h"
 
 namespace mrchem {
 
-Cavity::Cavity(std::vector<mrcpp::Coord<3>> &coord, std::vector<double> &R, double slope) {
-    this->pos = coord;
-    this->R = R;
-    this->d = slope;
-}
+Cavity::Cavity(std::vector<mrcpp::Coord<3>> &coord, std::vector<double> &R, double slope)
+        : pos(coord)
+        , R(R)
+        , d(slope) {}
 
 double Cavity::evalf(const mrcpp::Coord<3> &r) const {
     double C = 1.0;
-    double s, O;
     for (int i = 0; i < pos.size(); i++) {
-        s = math_utils::calc_distance(pos[i], r) - R[i];
-        O = 0.5 * (1 + std::erf(s / d));
-        C *= 1 - (1 - O); // check what happens if i just multiply O
+        double s = math_utils::calc_distance(pos[i], r) - R[i];
+        double O = 0.5 * (1 + std::erf(s / d));
+        C *= O;
     }
     C = 1 - C;
     return C;
