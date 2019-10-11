@@ -43,12 +43,7 @@ ReactionPotential::ReactionPotential(PoissonOperator_p P,
         , history(hist)
         , e_i(eps_i)
         , e_o(eps_o)
-        , is_lin(islin) {
-    this->electronicEnergy = 0.0;
-    this->nuclearEnergy = 0.0;
-    this->totalEnergy = 0.0;
-    this->electronsIn = 0.0;
-}
+        , is_lin(islin) {}
 
 void ReactionPotential::setRhoEff(QMFunction &rho_eff_func, std::function<double(const mrcpp::Coord<3> &r)> eps) {
     rho_nuc = chemistry::compute_nuclear_density(this->apply_prec, this->nuclei, 1000);

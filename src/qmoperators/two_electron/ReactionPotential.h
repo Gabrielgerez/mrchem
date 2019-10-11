@@ -17,9 +17,9 @@ public:
                       const Nuclei &nucs,
                       std::shared_ptr<mrchem::OrbitalVector> Phi,
                       int hist,
-                      double eps_i = 1.0,
-                      double eps_o = 2.0,
-                      bool islin = false);
+                      double eps_i,
+                      double eps_o,
+                      bool islin);
     ~ReactionPotential() = default;
 
     friend class ReactionOperator;
@@ -56,11 +56,11 @@ private:
 
     int history;
 
-    double d_coefficient = std::log(e_i / e_o); // factor with which rescale the derivative of the cavity function
-    double electronicEnergy;
-    double nuclearEnergy;
-    double totalEnergy;
-    double electronsIn;
+    double d_coefficient; // factor with which rescale the derivative of the cavity function
+    double electronicEnergy{0.0};
+    double nuclearEnergy{0.0};
+    double totalEnergy{0.0};
+    double electronsIn{0.0};
     double e_i;       // permitivity of free space, 1 inside the cavity
     double e_o;       // dielectric constant characteristic of the solvent
     bool is_lin;      // determines if the dielectric function will be implemented linearly or exponentially

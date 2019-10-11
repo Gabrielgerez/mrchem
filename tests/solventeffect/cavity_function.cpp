@@ -51,10 +51,8 @@ TEST_CASE("Cavityfunction", "[cavity_function]") {
     mrcpp::FunctionTree<3> cav_tree(*MRA);
     mrcpp::project<3>(prec, cav_tree, sphere);
 
-    SECTION("Volume of one sphere") {
-        auto sphere_volume = cav_tree.integrate();
-        REQUIRE(sphere_volume == Approx(4.4401176759).epsilon(thrs));
-    }
+    auto sphere_volume = cav_tree.integrate();
+    REQUIRE(sphere_volume == Approx(4.4401176759).epsilon(thrs));
 
     coords.push_back({0.0, 0.0, 1.0});
     R.push_back(1.0);
@@ -62,9 +60,7 @@ TEST_CASE("Cavityfunction", "[cavity_function]") {
     mrcpp::FunctionTree<3> two_cav_tree(*MRA);
     mrcpp::project<3>(prec, two_cav_tree, two_spheres);
 
-    SECTION("Volume of two spheres") {
-        auto two_sphere_volume = two_cav_tree.integrate();
-        REQUIRE(two_sphere_volume == Approx(7.50966)); //.epsilon(thrs))
-    }
+    auto two_sphere_volume = two_cav_tree.integrate();
+    REQUIRE(two_sphere_volume == Approx(7.50966)); //.epsilon(thrs))
 }
 } // namespace cavity_function
