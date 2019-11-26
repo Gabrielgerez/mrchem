@@ -16,9 +16,6 @@ using OrbitalVector_p = std::shared_ptr<mrchem::OrbitalVector>;
 
 namespace mrchem {
 
-// change input of the potential to molecule, so that we get the density, Nuclei and cavity all from it
-// make a dielectric function class which contains: eps_i, eps_o, is_lin and the cavity, but setCavity in
-// ReactionPotential
 ReactionPotential::ReactionPotential(PoissonOperator_p P,
                                      DerivativeOperator_p D,
                                      Cavity_p C,
