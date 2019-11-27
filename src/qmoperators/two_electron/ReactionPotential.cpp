@@ -44,7 +44,7 @@ ReactionPotential::ReactionPotential(PoissonOperator_p P,
 
 void ReactionPotential::setRhoEff(QMFunction &rho_eff_func, std::function<double(const mrcpp::Coord<3> &r)> eps) {
     rho_nuc = chemistry::compute_nuclear_density(this->apply_prec, this->nuclei, 1000);
-    density::compute(this->apply_prec, rho_el, *orbitals, DENSITY::Total);
+    density::compute(this->apply_prec, rho_el, *orbitals, DensityType::Total);
     rho_el.rescale(-1.0);
     qmfunction::add(rho_tot, 1.0, rho_el, 1.0, rho_nuc, -1.0);
     auto onesf = [eps](const mrcpp::Coord<3> &r) { return (1.0 / eps(r)) - 1.0; };
