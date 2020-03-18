@@ -1,7 +1,7 @@
 #include "ReactionPotential.h"
 #include "MRCPP/MWOperators"
-#include "MRCPP/Printer"
 #include "MRCPP/Plotter"
+#include "MRCPP/Printer"
 #include "MRCPP/Timer"
 #include "chemistry/chemistry_utils.h"
 #include "qmfunctions/density_utils.h"
@@ -90,7 +90,8 @@ void ReactionPotential::poissonSolver(QMFunction rho_eff_func,
     qmfunction::add(*diff_func, -1.0, *this, 1.0, *V_np1_func, -1.0);
     *error = diff_func->norm();
 
-    std::cout << "Reaction energy:\t" << getTotalEnergy() << "\n" << "gamma int:\t" << this->gamma.integrate().real() << std::endl;
+    std::cout << "Reaction energy:\t" << getTotalEnergy() << "\n"
+              << "gamma int:\t" << this->gamma.integrate().real() << std::endl;
     std::cout << "rho_tot int.:\t" << rho_tot.integrate() << std::endl;
     std::cout << "rho_eff int.:\t" << rho_eff_func.integrate() << std::endl;
 }
@@ -104,11 +105,11 @@ void ReactionPotential::SCRF(QMFunction *V_tot_func,
     double error = 1.00;
     int iter = 1;
     for (int iter = 1; error >= this->apply_prec; iter++) {
-      if(iter != 1){
-        QMFunction add_func;
-        qmfunction::add(add_func, 1.0, diff_func, 1.0, temp, -1.0);
-        temp = add_func;
-      }
+        if (iter != 1) {
+            QMFunction add_func;
+            qmfunction::add(add_func, 1.0, diff_func, 1.0, temp, -1.0);
+            temp = add_func;
+        }
         resetQMFunction((*this).diff_func);
         resetQMFunction(*V_tot_func);
         QMFunction V_np1_func;
@@ -145,7 +146,8 @@ void ReactionPotential::setup(double prec) {
     if (not temp.hasReal()) {
 
         auto onesf = [C_tmp, eps_i, eps_o](const mrcpp::Coord<3> &r) {
-                         return (1.0 / (eps_i * std::exp(std::log(eps_o / eps_i) * (1 - C_tmp.evalf(r))))) - 1.0; };
+            return (1.0 / (eps_i * std::exp(std::log(eps_o / eps_i) * (1 - C_tmp.evalf(r))))) - 1.0;
+        };
         this->d_coefficient = std::log(e_i / e_o);
 
         ones.alloc(NUMBER::Real);
@@ -177,11 +179,11 @@ void ReactionPotential::setup(double prec) {
     resetQMFunction(rho_eff_func);
     qmfunction::multiply(rho_eff_func, rho_tot, ones, this->apply_prec);
 
-    //update reaction potential
+    // update reaction potential
     QMFunction add_func;
     qmfunction::add(add_func, 1.0, diff_func, 1.0, temp, -1.0);
     temp = add_func;
-    //Solve the poisson equation
+    // Solve the poisson equation
     if (this->variational) {
         QMFunction V_np1_func;
         double error;
