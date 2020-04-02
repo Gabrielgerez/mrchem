@@ -130,7 +130,6 @@ void ReactionPotential::SCRF(QMFunction *V_tot_func,
 }
 
 void ReactionPotential::setup(double prec) {
-
     setApplyPrec(prec);
     QMFunction &temp = *this;
     QMFunction V_vac_func;
