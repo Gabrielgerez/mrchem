@@ -70,14 +70,16 @@ TEST_CASE("ReactionOperator", "[reaction_operator]") {
     molecule->push_back(*N);
 
     auto Phi_p = std::make_shared<OrbitalVector>();
+
     Phi_p->push_back(Orbital(SPIN::Paired));
+    HydrogenFunction f(1, 0, 0);
+    qmfunction::project((*Phi_p)[0], f, NUMBER::Real, prec);
 
     ReactionOperator Reo(P_p, D_p, sphere, *molecule, Phi_p, history, 1.0, 2.0, false);
     Reo.setup(prec);
     auto gamma_test = Reo.getGamma();
-    std::cout << Reo.getTotalEnergy() << "\n";
-    REQUIRE(Reo.getTotalEnergy() == Approx(-0.546375863081).epsilon(thrs));
-    REQUIRE(gamma_test.integrate().real() == Approx(-0.507809211055).epsilon(thrs));
+    REQUIRE(Reo.getTotalEnergy() == Approx(-0.210043571463).epsilon(thrs));
+    REQUIRE(gamma_test.integrate().real() == Approx(-0.18156088037).epsilon(thrs));
     Reo.clear();
 }
 } // namespace reaction_operator
