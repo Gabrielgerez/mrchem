@@ -1,5 +1,4 @@
 # vim:syntax=sh:
-
 world_prec = 1.0e-5               # Overall relative precision
 world_size = 5                    # Size of simulation box 2^n
 
@@ -20,7 +19,7 @@ $end
 }
 
 WaveFunction {
-  method = hf                     # Wave function method (HF or DFT)
+  method = pbe0                     # Wave function method (HF or DFT)
   restricted = true
 }
 
@@ -44,9 +43,6 @@ SolventEffect{
 SCF {
   run = true
   kain = 4                        # Length of KAIN iterative history
-  #max_iter = 5
-  orbital_thrs = 1.0e-2           # Convergence threshold in orbital residual
-  guess_type = mw
-  #initial_guess = sad_dz          # Type of initial guess: none, mw, gto
-  #write_orbitals = true
+  orbital_thrs = 1.0e-3           # Convergence threshold in orbital residual
+  guess_type = mw                 # Type of initial guess: none, mw, gto
 }

@@ -19,7 +19,7 @@ $end
 }
 
 WaveFunction {
-  method = hf                     # Wave function method (HF or DFT)
+  method = pbe0                     # Wave function method (HF or DFT)
   restricted = true
 }
 
@@ -37,13 +37,11 @@ Cavity {
 
 SolventEffect{
   kain = 4
-  #variational = true
 }
 
 SCF {
   run = true
   kain = 4                        # Length of KAIN iterative history
-  #max_iter = 5
-  orbital_thrs = 1.0e-2           # Convergence threshold in orbital residual
-  guess_type = mw          # Type of initial guess: none, mw, gto
+  orbital_thrs = 1.0e-3           # Convergence threshold in orbital residual
+  guess_type = mw                 # Type of initial guess: none, mw, gto
 }
