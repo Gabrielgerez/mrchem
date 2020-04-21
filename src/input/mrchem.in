@@ -479,14 +479,6 @@ def write_scf_fock(user_dict, mol_dict, wf_method, dft_funcs):
             "r_O": origin
         }
 
-    if user_dict["Properties"]["reaction_energy"]:
-        fock_dict["reaction_operator"] = {
-            "poisson_prec": user_dict["world_prec"],
-            "reaction_history": user_dict["SolventEffect"]["kain"],
-            "eps_in": user_dict["Cavity"]["epsilon_in"],
-            "eps_out": user_dict["Cavity"]["epsilon_out"],
-            "cav_lin": user_dict["Cavity"]["linear"]
-        }
     return fock_dict
 
 
