@@ -1,5 +1,5 @@
 # vim:syntax=sh:
-world_prec = 1.0e-5               # Overall relative precision
+world_prec = 1.0e-3               # Overall relative precision
 world_size = 5                    # Size of simulation box 2^n
 
 Molecule {
@@ -27,12 +27,12 @@ Cavity {
 }
 
 SolventEffect{
-  kain = 4
+  kain = 5
 }
 
 SCF {
   run = true
-  kain = 4                        # Length of KAIN iterative history
+  kain = 5                        # Length of KAIN iterative history
   orbital_thrs = 1.0e-3           # Convergence threshold in orbital residual
   guess_type = mw                 # Type of initial guess: none, mw, gto
 }
