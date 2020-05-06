@@ -194,28 +194,28 @@ void ReactionPotential::setup(double prec) {
     }
 }
 
-double &ReactionPotential::getTotalEnergy() {
+double ReactionPotential::getTotalEnergy() {
     QMFunction temp_prod_func;
     qmfunction::multiply(temp_prod_func, rho_tot, *this, this->apply_prec);
     totalEnergy = temp_prod_func.integrate().real();
     return totalEnergy;
 }
 
-double &ReactionPotential::getElectronicEnergy() {
+double ReactionPotential::getElectronicEnergy() {
     QMFunction temp_prod_func;
     qmfunction::multiply(temp_prod_func, rho_el, *this, this->apply_prec);
     electronicEnergy = temp_prod_func.integrate().real();
     return electronicEnergy;
 }
 
-double &ReactionPotential::getNuclearEnergy() {
+double ReactionPotential::getNuclearEnergy() {
     QMFunction temp_prod_func;
     qmfunction::multiply(temp_prod_func, rho_nuc, *this, this->apply_prec);
     nuclearEnergy = temp_prod_func.integrate().real();
     return nuclearEnergy;
 }
 
-double &ReactionPotential::getElectronIn() {
+double ReactionPotential::getElectronIn() {
     QMFunction temp_prod_func;
     cavity_func.alloc(NUMBER::Real);
     qmfunction::project(cavity_func, *cavity, NUMBER::Real, this->apply_prec / 100);

@@ -139,9 +139,9 @@ void driver::init_molecule(const json &json_mol, Molecule &mol) {
         radii.push_back(coord["radius"].get<double>());
         spheres.push_back(coord["center"].get<mrcpp::Coord<3>>());
     }
-    auto width = json_mol["cav_width"].get<double>();
+    auto cavity_width = json_mol["cavity_width"].get<double>();
 
-    mol.initCavity(spheres, radii, width);
+    mol.initCavity(spheres, radii, cavity_width);
     mol.printGeometry();
 }
 
@@ -926,10 +926,10 @@ void driver::build_fock_operator(const json &json_fock, Molecule &mol, FockOpera
         auto P_r = std::make_shared<PoissonOperator>(*MRA, poisson_prec);
         auto D_r = std::make_shared<mrcpp::ABGVOperator<3>>(*MRA, 0.0, 0.0);
         auto cavity_r = mol.getCavity_p();
-        auto hist_r = (*json_reaction)["reaction_history"].get<int>();
-        auto eps_in_r = (*json_reaction)["eps_in"].get<double>();
-        auto eps_out_r = (*json_reaction)["eps_out"].get<double>();
-        auto linear_r = (*json_reaction)["cav_lin"].get<bool>();
+        auto hist_r = (*json_reaction)["kain_history"].get<int>();
+        auto eps_in_r = (*json_reaction)["epsilon_in"].get<double>();
+        auto eps_out_r = (*json_reaction)["epsilon_out"].get<double>();
+        auto linear_r = (*json_reaction)["linear"].get<bool>();
         auto Reo = std::make_shared<ReactionOperator>(
             P_r, D_r, cavity_r, nuclei, Phi_p, hist_r, eps_in_r, eps_out_r, linear_r);
         Reo->setRunVariational((*json_reaction)["run_variational"].get<bool>());

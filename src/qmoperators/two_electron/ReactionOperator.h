@@ -32,12 +32,12 @@ public:
 
     ComplexDouble trace(OrbitalVector &Phi) { return RankZeroTensorOperator::trace(Phi); }
 
-    double &getTotalEnergy() { return this->potential->getTotalEnergy(); }
-    double &getElectronicEnergy() { return this->potential->getElectronicEnergy(); }
-    double &getNuclearEnergy() { return this->potential->getNuclearEnergy(); }
-    bool &getRunVariational() { return this->potential->getRunVariational(); }
-    QMFunction &getGamma() { return this->potential->getGamma(); }
-    QMFunction &getDiffFunc() { return this->potential->getDiffFunc(); }
+    double getTotalEnergy() { return this->potential->getTotalEnergy(); }
+    double getElectronicEnergy() { return this->potential->getElectronicEnergy(); }
+    double getNuclearEnergy() { return this->potential->getNuclearEnergy(); }
+    bool getRunVariational() { return this->potential->getRunVariational(); }
+    QMFunction getGamma() { return this->potential->getGamma(); }
+    QMFunction getDiffFunc() { return this->potential->getDiffFunc(); }
     QMFunction &getPotential() { return *this->potential; }
     void setDiffFunc(QMFunction new_diff_func) { this->potential->setDiffFunc(new_diff_func); }
     void setRunVariational(bool var) { this->potential->setRunVariational(var); }

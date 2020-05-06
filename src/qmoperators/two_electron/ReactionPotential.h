@@ -23,14 +23,13 @@ public:
     ~ReactionPotential() override { free(NUMBER::Total); }
     friend class ReactionOperator;
 
-    double &getTotalEnergy();
-    double &getElectronicEnergy();
-    double &getNuclearEnergy();
-    double &getElectronIn();
-    QMFunction &getGamma() { return gamma; }
-    QMFunction &getDiffFunc() { return diff_func; }
-    bool &getRunVariational() { return variational; }
-    // void setGamma(QMFunction new_gamma) { this->gamma = new_gamma; }
+    double getTotalEnergy();
+    double getElectronicEnergy();
+    double getNuclearEnergy();
+    double getElectronIn();
+    QMFunction getGamma() { return gamma; }
+    QMFunction getDiffFunc() { return this->diff_func; }
+    bool getRunVariational() { return variational; }
     void setDiffFunc(QMFunction new_diff_func) { this->diff_func = new_diff_func; }
     void setRunVariational(bool var) { this->variational = var; }
 

@@ -286,7 +286,7 @@ json GroundStateSolver::optimize(Molecule &mol, FockOperator &F) {
         // variational implementation of solvent effect
         if (solvent_var) {
             QMFunction &V_r = F.getReactionOperator()->getPotential();
-            QMFunction &diff_func = F.getReactionOperator()->getDiffFunc();
+            QMFunction diff_func = F.getReactionOperator()->getDiffFunc();
 
             Phi_n.push_back(Orbital(SPIN::Paired));
             Phi_n.back().QMFunction::operator=(V_r);
