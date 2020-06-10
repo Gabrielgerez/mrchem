@@ -32,6 +32,7 @@
 #include "chemistry/Cavity.h"
 #include "chemistry/Molecule.h"
 #include "chemistry/Nucleus.h"
+#include "chemistry/Permittivity.h"
 
 #include "initial_guess/chk.h"
 #include "initial_guess/core.h"
@@ -55,6 +56,7 @@
 #include "qmoperators/two_electron/ExchangeOperator.h"
 #include "qmoperators/two_electron/FockOperator.h"
 #include "qmoperators/two_electron/ReactionOperator.h"
+#include "qmoperators/two_electron/SCRF.h"
 #include "qmoperators/two_electron/XCOperator.h"
 
 #include "qmoperators/one_electron/H_BB_dia.h"
@@ -925,13 +927,18 @@ void driver::build_fock_operator(const json &json_fock, Molecule &mol, FockOpera
         auto poisson_prec = (*json_reaction)["poisson_prec"].get<double>();
         auto P_r = std::make_shared<PoissonOperator>(*MRA, poisson_prec);
         auto D_r = std::make_shared<mrcpp::ABGVOperator<3>>(*MRA, 0.0, 0.0);
-        auto cavity_r = mol.getCavity_p();
         auto hist_r = (*json_reaction)["kain_history"].get<int>();
+
+        auto cavity_r = mol.getCavity_p();
         auto eps_in_r = (*json_reaction)["epsilon_in"].get<double>();
         auto eps_out_r = (*json_reaction)["epsilon_out"].get<double>();
-        auto linear_r = (*json_reaction)["linear"].get<bool>();
-        auto Reo = std::make_shared<ReactionOperator>(
-            P_r, D_r, cavity_r, nuclei, Phi_p, hist_r, eps_in_r, eps_out_r, linear_r);
+        Permittivity dielectric_func(*cavity_r, eps_in_r, eps_out_r);
+
+        auto helper = std::make_shared<SCRF>(nuclei, dielectric_func, P_r, D_r);
+        helper->updateTotalDensity(*Phi_p, poisson_prec); // placeholder precision
+        auto Reo = std::make_shared<ReactionOperator>(P_r, D_r, hist_r);
+        Reo->setHelper(helper);
+        helper->setReactionPotential(Reo->getPotential());
         Reo->setRunVariational((*json_reaction)["run_variational"].get<bool>());
         F.getReactionOperator() = Reo;
     }

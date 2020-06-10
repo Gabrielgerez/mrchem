@@ -1,7 +1,5 @@
 target_sources(mrchem-tests
   PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/cavity_function.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/reaction_operator.cpp
   )
 
 add_Catch_test(

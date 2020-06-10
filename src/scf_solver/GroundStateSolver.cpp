@@ -285,8 +285,9 @@ json GroundStateSolver::optimize(Molecule &mol, FockOperator &F) {
 
         // variational implementation of solvent effect
         if (solvent_var) {
-            QMFunction &V_r = F.getReactionOperator()->getPotential();
-            QMFunction diff_func = F.getReactionOperator()->getDiffFunc();
+            auto helper = F.getReactionOperator()->getHelper();
+            QMFunction V_r = helper->getPotential();
+            QMFunction diff_func = helper->getDifferencePotential();
 
             Phi_n.push_back(Orbital(SPIN::Paired));
             Phi_n.back().QMFunction::operator=(V_r);
@@ -304,7 +305,7 @@ json GroundStateSolver::optimize(Molecule &mol, FockOperator &F) {
             diff_func.QMFunction::operator=(dPhi_n.back());
             dPhi_n.pop_back();
 
-            F.getReactionOperator()->setDiffFunc(diff_func);
+            helper->updateDifferencePotential(diff_func);
         } else {
             kain.accelerate(orb_prec, Phi_n, dPhi_n);
         }
