@@ -35,6 +35,7 @@ private:
     QMFunction difference_potential;
     QMFunction potential;
     std::shared_ptr<ReactionPotential> Rp;
+    mrcpp::FunctionTreeVector<3> d_cavity; // Vector containing the 3 partial derivatives of the cavity function
 
     QMFunctionVector makeTerms(double prec);
     QMFunction updateGamma(QMFunction potential_nm1, double prec);

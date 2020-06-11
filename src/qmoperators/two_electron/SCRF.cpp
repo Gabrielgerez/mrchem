@@ -38,16 +38,15 @@ void SCRF::updateTotalDensity(OrbitalVector Phi,
 QMFunction SCRF::updateGamma(QMFunction potential_nm1, double prec) {
     QMFunction gamma;
     gamma.alloc(NUMBER::Real);
-    // must do a better fix for this
-    mrcpp::FunctionTreeVector<3> d_cavity; // Vector containing the 3 partial derivatives of the cavity function
-
-    mrcpp::FunctionTree<3> *dx_cavity = new mrcpp::FunctionTree<3>(*MRA);
-    mrcpp::FunctionTree<3> *dy_cavity = new mrcpp::FunctionTree<3>(*MRA);
-    mrcpp::FunctionTree<3> *dz_cavity = new mrcpp::FunctionTree<3>(*MRA);
-    d_cavity.push_back(std::make_tuple(1.0, dx_cavity));
-    d_cavity.push_back(std::make_tuple(1.0, dy_cavity));
-    d_cavity.push_back(std::make_tuple(1.0, dz_cavity));
-    mrcpp::project<3>(prec / 100, d_cavity, this->epsilon.getGradVector());
+    if (this->d_cavity.size() == 0) {
+        mrcpp::FunctionTree<3> *dx_cavity = new mrcpp::FunctionTree<3>(*MRA);
+        mrcpp::FunctionTree<3> *dy_cavity = new mrcpp::FunctionTree<3>(*MRA);
+        mrcpp::FunctionTree<3> *dz_cavity = new mrcpp::FunctionTree<3>(*MRA);
+        d_cavity.push_back(std::make_tuple(1.0, dx_cavity));
+        d_cavity.push_back(std::make_tuple(1.0, dy_cavity));
+        d_cavity.push_back(std::make_tuple(1.0, dz_cavity));
+        mrcpp::project<3>(prec / 100, this->d_cavity, this->epsilon.getGradVector());
+    }
 
     auto d_V = mrcpp::gradient(*derivative, potential_nm1.real());
     mrcpp::dot(prec, gamma.real(), d_V, d_cavity);
