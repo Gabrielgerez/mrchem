@@ -9,12 +9,13 @@
 
 using PoissonOperator_p = std::shared_ptr<mrcpp::PoissonOperator>;
 using DerivativeOperator_p = std::shared_ptr<mrcpp::DerivativeOperator<3>>;
+using OrbitalVector_p = std::shared_ptr<mrchem::OrbitalVector>;
 
 namespace mrchem {
 class ReactionPotential;
 class SCRF final {
 public:
-    SCRF(Nuclei N, Permittivity e, PoissonOperator_p P, DerivativeOperator_p D);
+    SCRF(Nuclei N, Permittivity e, OrbitalVector_p phi, PoissonOperator_p P, DerivativeOperator_p D);
     friend class ReactionPotential;
     void updateTotalDensity(OrbitalVector Phi,
                             double prec); // pass the electron orbitals and computes the total density
@@ -28,6 +29,7 @@ private:
     double apply_prec = -1.0;
     Nuclei nuclei;
     Permittivity epsilon;
+    OrbitalVector_p Phi_p;
     PoissonOperator_p poisson;
     DerivativeOperator_p derivative;
     Density rho_nuc;

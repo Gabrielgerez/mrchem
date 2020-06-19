@@ -934,8 +934,7 @@ void driver::build_fock_operator(const json &json_fock, Molecule &mol, FockOpera
         auto eps_out_r = (*json_reaction)["epsilon_out"].get<double>();
         Permittivity dielectric_func(*cavity_r, eps_in_r, eps_out_r);
 
-        auto helper = std::make_shared<SCRF>(nuclei, dielectric_func, P_r, D_r);
-        helper->updateTotalDensity(*Phi_p, poisson_prec); // placeholder precision
+        auto helper = std::make_shared<SCRF>(nuclei, dielectric_func, Phi_p, P_r, D_r);
         auto Reo = std::make_shared<ReactionOperator>(P_r, D_r, hist_r);
         Reo->setHelper(helper);
         helper->setReactionPotential(Reo->getPotential());
