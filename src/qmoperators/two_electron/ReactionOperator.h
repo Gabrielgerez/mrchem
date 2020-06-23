@@ -10,9 +10,9 @@
  * This class is a simple TensorOperator realization of @class ReactionPotential.
  *
  */
-class SCRF;
 
 namespace mrchem {
+class SCRF;
 
 class ReactionOperator final : public RankZeroTensorOperator {
 public:

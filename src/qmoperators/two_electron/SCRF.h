@@ -24,7 +24,8 @@ public:
     QMFunction getPotential() const { return this->potential; }
     QMFunction getDifferencePotential() const { return this->difference_potential; }
     void setReactionPotential(std::shared_ptr<ReactionPotential> new_Rp) { this->Rp = new_Rp; }
-
+protected:
+    void clear();
 private:
     double apply_prec = -1.0;
     Nuclei nuclei;

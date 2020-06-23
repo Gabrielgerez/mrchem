@@ -51,10 +51,6 @@ void ReactionPotential::setup(double prec) {
     QMFunction gamma = Terms[1];
     QMFunction rho_eff = Terms[2];
     QMFunction V_vac = Terms[3];
-    std::cout << "integral of V_vac:\t" << V_vac.integrate().real() << "\n";
-    std::cout << "integral of V_nm1:\t" << V_nm1.integrate().real() << "\n";
-    std::cout << "integral of gamma:\t" << gamma.integrate().real() << "\n";
-    std::cout << "integral of rho_eff:\t" << rho_eff.integrate().real() << "\n";
 
     if (this->variational) {
         QMFunction poisson_func;
@@ -74,23 +70,20 @@ void ReactionPotential::setup(double prec) {
         println(0, error);
     } else {
         KAIN kain(this->history);
-        QMFunction poisson_func;
         QMFunction V_n;
         QMFunction dV_n;
-        QMFunction V_tot;
         double error = 10;
         for (int iter = 1; error >= this->apply_prec; iter++) {
-          if (iter > 3) break; // change this to 100 afterwards
-            this->helper->resetQMFunction(poisson_func);
+            if (iter > 100) break; 
+            QMFunction poisson_func;
+            QMFunction V_tot;
             this->helper->resetQMFunction(V_n);
             this->helper->resetQMFunction(dV_n);
-            this->helper->resetQMFunction(V_tot);
 
             // solve the poisson equation
             qmfunction::add(poisson_func, 1.0, gamma, 1.0, rho_eff, -1.0);
             mrcpp::apply(this->apply_prec, V_n.real(), *poisson, poisson_func.real());
             qmfunction::add(dV_n, 1.0, V_n, -1.0, V_nm1, -1.0);
-            std::cout << "integral of difference at line 93:\t" << dV_n.integrate().real() << "\n";
 
             // use a convergence accelerator
             if (iter > 1 and this->history > 0) accelerateConvergence(dV_n, V_nm1, kain);
@@ -103,29 +96,36 @@ void ReactionPotential::setup(double prec) {
             gamma.free(NUMBER::Real);
             gamma = this->helper->updateGamma(V_tot, this->apply_prec);
 
-            std::cout << "integral of V_nm1:\t" << V_nm1.integrate().real() << "\n";
             V_nm1.free(NUMBER::Real);
             qmfunction::deep_copy(V_nm1, V_n);
 
-            std::cout << "integral of V_n:\t" << V_n.integrate().real() << "\n";
-            std::cout << "integral of difference at line 109:\t" << dV_n.integrate().real() << "\n";
             println(0, "error:");
             println(0, error);
             println(0, "Microiteration:") println(0, iter);
+            this->helper->resetQMFunction(poisson_func);
+            this->helper->resetQMFunction(V_tot);
         }
         this->helper->updatePotential(V_nm1);
         this->helper->updateDifferencePotential(dV_n);
         temp = V_n;
     }
+    V_nm1.free(NUMBER::Real);
+    gamma.free(NUMBER::Real);
+    rho_eff.free(NUMBER::Real);
+    V_vac.free(NUMBER::Real);
+
 }
 
 void ReactionPotential::updatePotential(QMFunction new_potential) {
     QMFunction &temp = *this;
+    temp.free(NUMBER::Real);
     temp = new_potential;
 }
 
 void ReactionPotential::clear() {
+    QMFunction::free(NUMBER::Real);
     clearApplyPrec();
+    this->helper->clear();
 }
 
 } // namespace mrchem
