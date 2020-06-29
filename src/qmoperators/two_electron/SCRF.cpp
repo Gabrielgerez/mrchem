@@ -16,40 +16,39 @@ using DerivativeOperator_p = std::shared_ptr<mrcpp::DerivativeOperator<3>>;
 using OrbitalVector_p = std::shared_ptr<mrchem::OrbitalVector>;
 
 namespace mrchem {
-  SCRF::SCRF(Nuclei N, Permittivity e, OrbitalVector_p phi, PoissonOperator_p P, DerivativeOperator_p D)
-        : nuclei(N)
+  SCRF::SCRF(Nuclei N, Permittivity e, OrbitalVector_p phi, PoissonOperator_p P, DerivativeOperator_p D, double orb_prec)
+        : apply_prec(orb_prec)
         , epsilon(e)
-        , Phi_p(phi)
         , poisson(P)
         , derivative(D)
         , rho_nuc(false)
         , rho_tot(false)
         , difference_potential(false)
-        , potential(false) {}
+        , potential(false) {
+        rho_nuc = chemistry::compute_nuclear_density(this->apply_prec, N, 1000);
+        updateTotalDensity(*phi, this->apply_prec);
 
-void SCRF::updateTotalDensity(OrbitalVector Phi,
-                              double prec) { // pass the electron orbitals and computes the total density
-    if (not rho_nuc.hasReal()) { rho_nuc = chemistry::compute_nuclear_density(prec, this->nuclei, 1000); }
-    resetQMFunction(this->rho_tot);
-    Density rho_el(false);
-    density::compute(prec, rho_el, Phi, DensityType::Total);
-    rho_el.rescale(-1.0);
-    qmfunction::add(rho_tot, 1.0, rho_el, 1.0, rho_nuc, -1.0); // probably change this into a vector
-}
-
-QMFunction SCRF::updateGamma(QMFunction potential_nm1, double prec) {
-    QMFunction gamma;
-    gamma.alloc(NUMBER::Real);
-    if (this->d_cavity.size() == 0) {
         mrcpp::FunctionTree<3> *dx_cavity = new mrcpp::FunctionTree<3>(*MRA);
         mrcpp::FunctionTree<3> *dy_cavity = new mrcpp::FunctionTree<3>(*MRA);
         mrcpp::FunctionTree<3> *dz_cavity = new mrcpp::FunctionTree<3>(*MRA);
         d_cavity.push_back(std::make_tuple(1.0, dx_cavity));
         d_cavity.push_back(std::make_tuple(1.0, dy_cavity));
         d_cavity.push_back(std::make_tuple(1.0, dz_cavity));
-        mrcpp::project<3>(prec / 100, this->d_cavity, this->epsilon.getGradVector());
-    }
+        mrcpp::project<3>(this->apply_prec / 100, this->d_cavity, this->epsilon.getGradVector());
+  }
 
+  void SCRF::updateTotalDensity(OrbitalVector Phi,
+                                double prec) { // pass the electron orbitals and computes the total density
+    resetQMFunction(this->rho_tot);
+    Density rho_el(false);
+    density::compute(prec, rho_el, Phi, DensityType::Total);
+    rho_el.rescale(-1.0);
+    qmfunction::add(this->rho_tot, 1.0, rho_el, 1.0, this->rho_nuc, -1.0); // probably change this into a vector
+}
+
+QMFunction SCRF::updateGamma(QMFunction potential_nm1, double prec) {
+    QMFunction gamma;
+    gamma.alloc(NUMBER::Real);
     auto d_V = mrcpp::gradient(*derivative, potential_nm1.real());
     mrcpp::dot(prec, gamma.real(), d_V, d_cavity);
     gamma.rescale(std::log((epsilon.eps_in / epsilon.eps_out)) * (1.0 / (4.0 * MATHCONST::pi)));
@@ -57,7 +56,8 @@ QMFunction SCRF::updateGamma(QMFunction potential_nm1, double prec) {
 }
 
 QMFunctionVector SCRF::makeTerms(double prec) {
-    this->apply_prec = prec;
+    std::cout << "this potential:\t" << this->potential.integrate() << "\n";
+    std::cout << "this difference_potential:\t" << this->difference_potential.integrate() << "\n";
     QMFunction vacuum_potential;
     QMFunction rho_eff;
     QMFunction eps;
@@ -72,10 +72,7 @@ QMFunctionVector SCRF::makeTerms(double prec) {
     eps_inv.alloc(NUMBER::Real);
     first_term.alloc(NUMBER::Real);
     total_potential.alloc(NUMBER::Real);
-
-    updateTotalDensity(*(this->Phi_p), prec);
-
-    mrcpp::apply(prec, vacuum_potential.real(), *poisson, rho_tot.real());
+    mrcpp::apply(prec, vacuum_potential.real(), *poisson, this->rho_tot.real());
 
     epsilon.flipFunction(false);
     qmfunction::project(eps, epsilon, NUMBER::Real, prec / 100);
@@ -114,12 +111,12 @@ QMFunctionVector SCRF::makeTerms(double prec) {
 
 void SCRF::updatePotential(QMFunction new_potential) {
     resetQMFunction(potential);
-    this->potential = new_potential;
+    qmfunction::deep_copy(this->potential, new_potential);
 }
 
 void SCRF::updateDifferencePotential(QMFunction diff_potential) {
     resetQMFunction(difference_potential);
-    this->difference_potential = diff_potential;
+    qmfunction::deep_copy(this->difference_potential, diff_potential);
     QMFunction new_potential;
     new_potential.alloc(NUMBER::Real);
     qmfunction::add(new_potential, 1.0, this->potential, 1.0, this->difference_potential, -1.0);
@@ -168,7 +165,5 @@ void SCRF::resetQMFunction(QMFunction &function) {
 }
 void SCRF::clear() {
   this->rho_tot.free(NUMBER::Real);
-  this->rho_nuc.free(NUMBER::Real);
-
 }
 } // namespace mrchem

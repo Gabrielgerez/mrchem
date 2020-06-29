@@ -15,7 +15,7 @@ namespace mrchem {
 class ReactionPotential;
 class SCRF final {
 public:
-    SCRF(Nuclei N, Permittivity e, OrbitalVector_p phi, PoissonOperator_p P, DerivativeOperator_p D);
+  SCRF(Nuclei N, Permittivity e, OrbitalVector_p phi, PoissonOperator_p P, DerivativeOperator_p D, double orb_prec);
     friend class ReactionPotential;
     void updateTotalDensity(OrbitalVector Phi,
                             double prec); // pass the electron orbitals and computes the total density
@@ -27,10 +27,8 @@ public:
 protected:
     void clear();
 private:
-    double apply_prec = -1.0;
-    Nuclei nuclei;
+    double apply_prec;
     Permittivity epsilon;
-    OrbitalVector_p Phi_p;
     PoissonOperator_p poisson;
     DerivativeOperator_p derivative;
     Density rho_nuc;

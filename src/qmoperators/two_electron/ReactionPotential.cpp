@@ -74,7 +74,7 @@ void ReactionPotential::setup(double prec) {
         QMFunction dV_n;
         double error = 10;
         for (int iter = 1; error >= this->apply_prec; iter++) {
-            if (iter > 100) break; 
+            if (iter > 100) break;
             QMFunction poisson_func;
             QMFunction V_tot;
             this->helper->resetQMFunction(V_n);
@@ -113,6 +113,7 @@ void ReactionPotential::setup(double prec) {
     gamma.free(NUMBER::Real);
     rho_eff.free(NUMBER::Real);
     V_vac.free(NUMBER::Real);
+    Terms.clear(); 
 
 }
 

@@ -35,6 +35,7 @@ public:
     std::shared_ptr<SCRF> getHelper() { return this->potential->getHelper(); }
     void setHelper(std::shared_ptr<SCRF> helper) { this->potential->setHelper(helper); }
     std::shared_ptr<ReactionPotential> getPotential() { return this->potential; }
+    void updateTotalDensity(OrbitalVector Phi,double prec) { this->potential->updateTotalDensity(Phi, prec); }
 
 private:
     std::shared_ptr<ReactionPotential> potential{nullptr};

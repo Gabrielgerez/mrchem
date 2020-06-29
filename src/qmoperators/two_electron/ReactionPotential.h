@@ -21,12 +21,13 @@ public:
     bool getRunVariational() const { return variational; }
     void setRunVariational(bool var) { this->variational = var; }
     std::shared_ptr<SCRF> getHelper() { return this->helper; }
+    void updateTotalDensity(OrbitalVector Phi, double prec) { this->helper->updateTotalDensity(Phi, prec); }
     void setHelper(std::shared_ptr<SCRF> new_helper) { this->helper = new_helper; }
     double getNuclearEnergy() { return this->helper->getNuclearEnergy(); }
     double getElectronicEnergy() { return this->helper->getElectronicEnergy(); }
     double getTotalEnergy() { return this->helper->getTotalEnergy(); }
 
-protected:
+ protected:
     void clear();
 
 private:

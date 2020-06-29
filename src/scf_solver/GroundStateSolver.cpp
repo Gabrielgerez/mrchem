@@ -254,6 +254,7 @@ json GroundStateSolver::optimize(Molecule &mol, FockOperator &F) {
         Timer t_scf;
         double orb_prec = adjustPrecision(err_o);
         double helm_prec = getHelmholtzPrec();
+        if (F.getReactionOperator() != nullptr) F.getReactionOperator()->updateTotalDensity(Phi_n, orb_prec);
         if (nIter < 2) F.setup(orb_prec);
 
         // Init Helmholtz operator
@@ -324,6 +325,7 @@ json GroundStateSolver::optimize(Molecule &mol, FockOperator &F) {
         orbital::orthonormalize(orb_prec, Phi_n, F_mat);
 
         // Compute Fock matrix and energy
+        if (F.getReactionOperator() != nullptr) F.getReactionOperator()->updateTotalDensity(Phi_n, orb_prec);
         F.setup(orb_prec);
         F_mat = F(Phi_n, Phi_n);
         E_n = F.trace(Phi_n, nucs);
@@ -345,7 +347,7 @@ json GroundStateSolver::optimize(Molecule &mol, FockOperator &F) {
             F.rotate(U_mat);
             kain.clear();
         } else if (needDiagonalization(nIter, converged)) {
-            ComplexMatrix U_mat = orbital::diagonalize(orb_prec, Phi_n, F_mat);
+          ComplexMatrix U_mat = orbital::diagonalize(orb_prec, Phi_n, F_mat);
             F.rotate(U_mat);
             kain.clear();
         }
