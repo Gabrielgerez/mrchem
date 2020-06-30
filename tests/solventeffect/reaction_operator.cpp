@@ -40,12 +40,12 @@
 #include "chemistry/Element.h"
 #include "chemistry/Nucleus.h"
 #include "chemistry/PeriodicTable.h"
+#include "chemistry/Permittivity.h"
 #include "qmfunctions/Orbital.h"
 #include "qmfunctions/orbital_utils.h"
 #include "qmfunctions/qmfunction_utils.h"
 #include "qmoperators/two_electron/ReactionOperator.h"
 #include "qmoperators/two_electron/SCRF.h"
-#include "chemistry/Permittivity.h"
 
 using namespace mrchem;
 using namespace orbital;
@@ -80,7 +80,7 @@ TEST_CASE("ReactionOperator", "[reaction_operator]") {
     double eps_out = 2.0;
     Permittivity dielectric_func(*sphere, eps_in, eps_out);
 
-    //SCRF helper(molecule, dielectric_func, Phi_p, P_p, D_p);
+    // SCRF helper(molecule, dielectric_func, Phi_p, P_p, D_p);
     auto helper = std::make_shared<SCRF>(molecule, dielectric_func, Phi_p, P_p, D_p, prec);
     auto Reo = std::make_shared<ReactionOperator>(P_p, D_p, history);
     Reo->setHelper(helper);
@@ -88,7 +88,8 @@ TEST_CASE("ReactionOperator", "[reaction_operator]") {
     Reo->setRunVariational(false);
     Reo->setup(prec);
     std::cout << Reo->getPotential() << "\n";
-    std::cout << "you shall not pass" << "\n";
+    std::cout << "you shall not pass"
+              << "\n";
     Reo->clear();
     REQUIRE(eps_in == 0.00);
 }
