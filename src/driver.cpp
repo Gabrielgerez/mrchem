@@ -934,10 +934,10 @@ void driver::build_fock_operator(const json &json_fock, Molecule &mol, FockOpera
         auto eps_out_r = (*json_reaction)["epsilon_out"].get<double>();
         Permittivity dielectric_func(*cavity_r, eps_in_r, eps_out_r);
 
-        auto helper = std::make_shared<SCRF>(nuclei, dielectric_func, Phi_p, P_r, D_r, poisson_prec); // want to use orb_prec for this
         auto Reo = std::make_shared<ReactionOperator>(P_r, D_r, hist_r);
+        auto helper = std::make_shared<SCRF>(
+            Reo->getPotential(), nuclei, dielectric_func, Phi_p, poisson_prec); // want to use orb_prec for this
         Reo->setHelper(helper);
-        helper->setReactionPotential(Reo->getPotential());
         Reo->setRunVariational((*json_reaction)["run_variational"].get<bool>());
         F.getReactionOperator() = Reo;
     }

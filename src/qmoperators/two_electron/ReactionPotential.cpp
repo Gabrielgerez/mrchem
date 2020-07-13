@@ -46,43 +46,43 @@ void ReactionPotential::setup(double prec) {
     QMFunction &temp = *this;
 
     // Solve the poisson equation
-    QMFunctionVector Terms = this->helper->makeTerms(this->apply_prec);
+    QMFunctionVector Terms = this->helper->makeTerms(this->derivative, this->poisson, this->apply_prec);
     QMFunction V_nm1 = Terms[0];
     QMFunction gamma = Terms[1];
     QMFunction rho_eff = Terms[2];
     QMFunction V_vac = Terms[3];
+    QMFunction V_n;
+    QMFunction dV_n;
+    QMFunction poisson_func;
 
     if (this->variational) {
-        QMFunction poisson_func;
-        QMFunction V_n;
-        QMFunction dV_n;
-        poisson_func.alloc(NUMBER::Real);
         V_n.alloc(NUMBER::Real);
-        dV_n.alloc(NUMBER::Real);
-
         qmfunction::add(poisson_func, 1.0, gamma, 1.0, rho_eff, -1.0);
         mrcpp::apply(this->apply_prec, V_n.real(), *poisson, poisson_func.real());
         qmfunction::add(dV_n, 1.0, V_n, -1.0, V_nm1, -1.0);
-        this->helper->updateDifferencePotential(dV_n);
         auto error = dV_n.norm();
-        temp = V_n;
-        println(0, "error:");
+
+        println(0, "error:"); // have to print this prettier
         println(0, error);
     } else {
+        QMFunction V_tot;
+
         KAIN kain(this->history);
-        QMFunction V_n;
-        QMFunction dV_n;
         double error = 10;
-        for (int iter = 1; error >= this->apply_prec; iter++) {
-            if (iter > 100) break;
-            QMFunction poisson_func;
-            QMFunction V_tot;
+        double converge_prec = this->apply_prec * 1.0e2;
+        for (int iter = 1; error >= converge_prec && iter <= 100; iter++) {
+            if (iter > 1) {
+                dV_n.free(NUMBER::Real);
+                poisson_func.free(NUMBER::Real);
+                V_tot.free(NUMBER::Real);
+                V_nm1.free(NUMBER::Real);
+                qmfunction::deep_copy(V_nm1, V_n);
+            }
             this->helper->resetQMFunction(V_n);
-            this->helper->resetQMFunction(dV_n);
 
             // solve the poisson equation
             qmfunction::add(poisson_func, 1.0, gamma, 1.0, rho_eff, -1.0);
-            mrcpp::apply(this->apply_prec, V_n.real(), *poisson, poisson_func.real());
+            mrcpp::apply(converge_prec, V_n.real(), *poisson, poisson_func.real());
             qmfunction::add(dV_n, 1.0, V_n, -1.0, V_nm1, -1.0);
 
             // use a convergence accelerator
@@ -93,38 +93,32 @@ void ReactionPotential::setup(double prec) {
 
             // set up for next iteration
             qmfunction::add(V_tot, 1.0, V_n, 1.0, V_vac, -1.0);
-            gamma.free(NUMBER::Real);
-            gamma = this->helper->updateGamma(V_tot, this->apply_prec);
-
-            V_nm1.free(NUMBER::Real);
-            qmfunction::deep_copy(V_nm1, V_n);
+            this->helper->updateGamma(gamma, derivative, V_tot, converge_prec);
 
             println(0, "error:");
             println(0, error);
             println(0, "Microiteration:") println(0, iter);
-            this->helper->resetQMFunction(poisson_func);
-            this->helper->resetQMFunction(V_tot);
+            if ((error <= converge_prec) && (iter < 20)) converge_prec = this->apply_prec;
         }
-        this->helper->updatePotential(V_nm1);
-        this->helper->updateDifferencePotential(dV_n);
-        temp = V_n;
+        V_tot.free(NUMBER::Real);
+        kain.clear();
     }
+
+    this->helper->updateDifferencePotential(dV_n);
+    qmfunction::deep_copy(temp, V_nm1);
+
     V_nm1.free(NUMBER::Real);
+    V_n.free(NUMBER::Real);
+    dV_n.free(NUMBER::Real);
     gamma.free(NUMBER::Real);
     rho_eff.free(NUMBER::Real);
     V_vac.free(NUMBER::Real);
-    Terms.clear(); 
-
-}
-
-void ReactionPotential::updatePotential(QMFunction new_potential) {
-    QMFunction &temp = *this;
-    temp.free(NUMBER::Real);
-    temp = new_potential;
+    poisson_func.free(NUMBER::Real);
+    Terms.clear();
 }
 
 void ReactionPotential::clear() {
-    QMFunction::free(NUMBER::Real);
+    //    QMFunction::free(NUMBER::Real);
     clearApplyPrec();
     this->helper->clear();
 }
