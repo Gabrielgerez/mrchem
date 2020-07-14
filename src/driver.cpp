@@ -365,7 +365,8 @@ bool driver::scf::guess_energy(const json &json_guess, Molecule &mol, FockOperat
     auto &F_mat = mol.getFockMatrix();
     F_mat = ComplexMatrix::Zero(Phi.size(), Phi.size());
     if (localize) orbital::localize(prec, Phi, F_mat);
-
+    if (F.getReactionOperator() != nullptr)
+        F.getReactionOperator()->initial_setup(); // not necessary to run the nested reaction potential procedure
     F.setup(prec);
     F_mat = F(Phi, Phi);
     mol.getSCFEnergy() = F.trace(Phi, nucs);

@@ -20,6 +20,7 @@ public:
     friend class ReactionPotential;
     void updateTotalDensity(OrbitalVector Phi,
                             double prec); // pass the electron orbitals and computes the total density
+    void UpdateExternalDensity(Density new_density) { this->rho_ext = new_density; }
     void updateDifferencePotential(QMFunction diff_potential);
     std::shared_ptr<mrchem::ReactionPotential> getReactionPotential() const { return this->reaction_potential; }
     QMFunction getDifferencePotential() const { return this->difference_potential; }
@@ -31,6 +32,7 @@ private:
     double apply_prec;
     Permittivity epsilon;
     Density rho_nuc;
+    Density rho_ext;
     Density rho_tot;
     QMFunction difference_potential;
     std::shared_ptr<mrchem::ReactionPotential> reaction_potential;

@@ -20,6 +20,7 @@ SCRF::SCRF(std::shared_ptr<ReactionPotential> Rp, Nuclei N, Permittivity e, Orbi
         : apply_prec(orb_prec)
         , epsilon(e)
         , rho_nuc(false)
+        , rho_ext(false)
         , rho_tot(false)
         , difference_potential(false)
         , reaction_potential(Rp) {
@@ -52,7 +53,7 @@ void SCRF::updateGamma(QMFunction &gamma_func,
     auto d_V = mrcpp::gradient(*derivative, potential_nm1.real());
     mrcpp::dot(prec, gamma_func.real(), d_V, d_cavity);
     gamma_func.rescale(std::log((epsilon.eps_in / epsilon.eps_out)) * (1.0 / (4.0 * MATHCONST::pi)));
-    d_V.clear();
+    mrcpp::clear(d_V, true);
 }
 
 QMFunctionVector SCRF::makeTerms(DerivativeOperator_p derivative, PoissonOperator_p poisson, double prec) {
@@ -62,13 +63,21 @@ QMFunctionVector SCRF::makeTerms(DerivativeOperator_p derivative, PoissonOperato
     QMFunction first_term;
     QMFunction gamma;
     QMFunction total_potential;
+    Density Poisson_density(false);
 
     vacuum_potential.alloc(NUMBER::Real);
     rho_eff.alloc(NUMBER::Real);
     eps_inv.alloc(NUMBER::Real);
     first_term.alloc(NUMBER::Real);
     total_potential.alloc(NUMBER::Real);
-    mrcpp::apply(prec, vacuum_potential.real(), *poisson, this->rho_tot.real());
+
+    if (rho_ext.hasReal()) {
+        qmfunction::add(Poisson_density, 1.0, this->rho_tot, 1.0, this->rho_ext, -1.0);
+    } else {
+        Poisson_density = this->rho_tot;
+    }
+
+    mrcpp::apply(prec, vacuum_potential.real(), *poisson, Poisson_density.real());
 
     epsilon.flipFunction(true);
     qmfunction::project(eps_inv, epsilon, NUMBER::Real, prec / 100);

@@ -6,6 +6,8 @@
 #include "chemistry/chemistry_utils.h"
 #include "qmfunctions/density_utils.h"
 #include "qmfunctions/qmfunction_utils.h"
+#include "utils/print_utils.h"
+#include <string>
 
 using mrcpp::Printer;
 using mrcpp::Timer;
@@ -43,6 +45,11 @@ void ReactionPotential::accelerateConvergence(QMFunction &diff_func, QMFunction 
 
 void ReactionPotential::setup(double prec) {
     setApplyPrec(prec);
+
+    if (this->run_once) {
+        this->run_once = false;
+        return;
+    }
     QMFunction &temp = *this;
 
     // Solve the poisson equation
@@ -54,7 +61,6 @@ void ReactionPotential::setup(double prec) {
     QMFunction V_n;
     QMFunction dV_n;
     QMFunction poisson_func;
-
     if (this->variational) {
         V_n.alloc(NUMBER::Real);
         qmfunction::add(poisson_func, 1.0, gamma, 1.0, rho_eff, -1.0);
@@ -62,14 +68,14 @@ void ReactionPotential::setup(double prec) {
         qmfunction::add(dV_n, 1.0, V_n, -1.0, V_nm1, -1.0);
         auto error = dV_n.norm();
 
-        println(0, "error:"); // have to print this prettier
-        println(0, error);
+        print_utils::text(0, "error:           ", print_utils::dbl_to_str(error, 5, true));
     } else {
+        print_utils::headline(0, "Calculating Reaction Potential");
         QMFunction V_tot;
 
         KAIN kain(this->history);
         double error = 10;
-        double converge_prec = this->apply_prec * 1.0e2;
+        double converge_prec = this->mo_residual;
         for (int iter = 1; error >= converge_prec && iter <= 100; iter++) {
             if (iter > 1) {
                 dV_n.free(NUMBER::Real);
@@ -82,7 +88,7 @@ void ReactionPotential::setup(double prec) {
 
             // solve the poisson equation
             qmfunction::add(poisson_func, 1.0, gamma, 1.0, rho_eff, -1.0);
-            mrcpp::apply(converge_prec, V_n.real(), *poisson, poisson_func.real());
+            mrcpp::apply(this->apply_prec, V_n.real(), *poisson, poisson_func.real());
             qmfunction::add(dV_n, 1.0, V_n, -1.0, V_nm1, -1.0);
 
             // use a convergence accelerator
@@ -93,20 +99,19 @@ void ReactionPotential::setup(double prec) {
 
             // set up for next iteration
             qmfunction::add(V_tot, 1.0, V_n, 1.0, V_vac, -1.0);
-            this->helper->updateGamma(gamma, derivative, V_tot, converge_prec);
+            this->helper->updateGamma(gamma, derivative, V_tot, this->apply_prec);
 
-            println(0, "error:");
-            println(0, error);
-            println(0, "Microiteration:") println(0, iter);
-            if ((error <= converge_prec) && (iter < 20)) converge_prec = this->apply_prec;
+            print_utils::text(0, "error:           ", print_utils::dbl_to_str(error, 5, true));
+            print_utils::text(0, "Microiteration:  ", std::to_string(iter));
+            // if ((error <= converge_prec) && (iter < 20) && (converge_prec > this->apply_prec)) converge_prec /= 10.0;
         }
+        println(0, " Converged Reaction Potential!");
         V_tot.free(NUMBER::Real);
         kain.clear();
     }
 
     this->helper->updateDifferencePotential(dV_n);
     qmfunction::deep_copy(temp, V_nm1);
-
     V_nm1.free(NUMBER::Real);
     V_n.free(NUMBER::Real);
     dV_n.free(NUMBER::Real);
