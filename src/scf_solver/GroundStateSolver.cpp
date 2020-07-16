@@ -293,26 +293,26 @@ json GroundStateSolver::optimize(Molecule &mol, FockOperator &F) {
             QMFunction V_r = *(helper->getReactionPotential());
             QMFunction diff_func = helper->getDifferencePotential();
 
-            Phi_n.push_back(Orbital(SPIN::Paired));
-            Phi_n.back().QMFunction::operator=(V_r);
+            OrbitalVector V_n;
+            OrbitalVector dV_n;
 
-            dPhi_n.push_back(Orbital(SPIN::Paired));
-            dPhi_n.back().QMFunction::operator=(diff_func);
-            // variational implementation of solvent effect
+            V_n.push_back(Orbital(SPIN::Paired));
+            V_n.back().QMFunction::operator=(V_r);
+
+            dV_n.push_back(Orbital(SPIN::Paired));
+            dV_n.back().QMFunction::operator=(diff_func);
 
             // Employ KAIN accelerator
-            kain.accelerate(orb_prec, Phi_n, dPhi_n);
+            helper->getKain().accelerate(orb_prec / 100, V_n, dV_n);
 
-            // variational implementation of solvent effect
-            V_r.QMFunction::operator=(Phi_n.back());
-            Phi_n.pop_back();
-            diff_func.QMFunction::operator=(dPhi_n.back());
-            dPhi_n.pop_back();
+            V_r.QMFunction::operator=(V_n.back());
+            V_n.pop_back();
+            diff_func.QMFunction::operator=(dV_n.back());
+            dV_n.pop_back();
 
             helper->updateDifferencePotential(diff_func);
-        } else {
-            kain.accelerate(orb_prec, Phi_n, dPhi_n);
         }
+        kain.accelerate(orb_prec, Phi_n, dPhi_n);
         // variational implementation of solvent effect
 
         // Compute errors
