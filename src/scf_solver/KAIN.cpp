@@ -63,6 +63,9 @@ void KAIN::setupLinearSystem() {
 
         auto &phi_m = this->orbitals[nHistory][n];
         auto &fPhi_m = this->dOrbitals[nHistory][n];
+        std::cout << __FILE__ << " " << __func__ << "\n";
+        std::cout << __LINE__ << " phi_m " << phi_m.integrate() << "\n";
+        std::cout << __LINE__ << " fphi_m " << fPhi_m.integrate() << "\n";
         if (mpi::my_orb(phi_m)) {
             if (not mpi::my_orb(fPhi_m)) MSG_ABORT("MPI rank mismatch: fPhi_m");
 
@@ -70,22 +73,34 @@ void KAIN::setupLinearSystem() {
                 auto &phi_i = this->orbitals[i][n];
                 if (not mpi::my_orb(phi_i)) MSG_ABORT("MPI rank mismatch: phi_i");
                 auto dPhi_im = phi_m.paramCopy();
+                std::cout << __LINE__ << " dPhi_im " << dPhi_im.integrate() << "\n";
+                std::cout << __LINE__ << " phi_i " << phi_i.integrate() << "\n";
+                std::cout << __LINE__ << " phi_m " << phi_m.integrate() << "\n";
                 qmfunction::add(dPhi_im, 1.0, phi_i, -1.0, phi_m, -1.0);
+                std::cout << __LINE__ << " dPhi_im " << dPhi_im.integrate() << "\n";
 
                 for (int j = 0; j < nHistory; j++) {
                     auto &fPhi_j = this->dOrbitals[j][n];
                     if (not mpi::my_orb(fPhi_j)) MSG_ABORT("MPI rank mismatch: fPhi_j");
                     auto dfPhi_jm = fPhi_m.paramCopy();
+                    std::cout << __LINE__ << " dfPhi_jm " << dfPhi_jm.integrate() << "\n";
+                    std::cout << __LINE__ << " fPhi_m " << fPhi_m.integrate() << "\n";
+                    std::cout << __LINE__ << " fPhi_j " << fPhi_j.integrate() << "\n";
                     qmfunction::add(dfPhi_jm, 1.0, fPhi_j, -1.0, fPhi_m, -1.0);
+                    std::cout << __LINE__ << " dfPhi_jm " << dfPhi_jm.integrate() << "\n";
 
                     // Ref. Harrisons KAIN paper the following has the wrong sign,
                     // but we define the updates (lowercase f) with opposite sign.
+                    std::cout << __LINE__ << " dPhi_im " << dPhi_im.integrate() << "\n";
+                    std::cout << __LINE__ << " dfPhi_jm " << dfPhi_jm.integrate() << "\n";
                     orbA(i, j) -= orbital::dot(dPhi_im, dfPhi_jm);
                 }
                 orbB(i) += orbital::dot(dPhi_im, fPhi_m);
             }
         }
-        A_matrices.push_back(orbA);
+        A_matrices.push_back(orbA * this->scaling);
+        std::cout << __LINE__ << " orbA " << orbA << "\n";
+        std::cout << __LINE__ << " orbB " << orbB << "\n";
         b_vectors.push_back(orbB);
     }
 

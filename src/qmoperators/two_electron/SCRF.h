@@ -23,8 +23,8 @@ public:
                             double prec); // pass the electron orbitals and computes the total density
     void UpdateExternalDensity(Density new_density) { this->rho_ext = new_density; }
     void updateDifferencePotential(QMFunction diff_potential);
-    std::shared_ptr<mrchem::ReactionPotential> getReactionPotential() const { return this->reaction_potential; }
-    QMFunction getDifferencePotential() const { return this->difference_potential; }
+    std::shared_ptr<mrchem::ReactionPotential> getReactionPotential() { return this->reaction_potential; }
+    QMFunction &getDifferencePotential() { return this->difference_potential; }
     KAIN &getKain() { return this->reaction_optimizer; }
 
 protected:

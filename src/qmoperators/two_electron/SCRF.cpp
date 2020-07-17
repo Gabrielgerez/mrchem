@@ -24,7 +24,7 @@ SCRF::SCRF(std::shared_ptr<ReactionPotential> Rp, Nuclei N, Permittivity e, Orbi
         , rho_tot(false)
         , difference_potential(false)
         , reaction_potential(Rp)
-        , reaction_optimizer(reaction_potential->history) {
+        , reaction_optimizer(reaction_potential->history, 0, false, 1.0e-3) {
     rho_nuc = chemistry::compute_nuclear_density(this->apply_prec, N, 1000);
     updateTotalDensity(*phi, this->apply_prec);
 

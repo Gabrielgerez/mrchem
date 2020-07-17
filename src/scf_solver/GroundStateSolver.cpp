@@ -292,6 +292,9 @@ json GroundStateSolver::optimize(Molecule &mol, FockOperator &F) {
             auto helper = F.getReactionOperator()->getHelper();
             QMFunction V_r = *(helper->getReactionPotential());
             QMFunction diff_func = helper->getDifferencePotential();
+            std::cout << __FILE__ << " " << __func__ << "\n"
+                      << __LINE__ << " V_r intetgral:\t" << V_r.integrate() << "\n";
+            std::cout << __LINE__ << " diff_func integral:\t" << diff_func.integrate() << "\n";
 
             OrbitalVector V_n;
             OrbitalVector dV_n;
@@ -303,7 +306,9 @@ json GroundStateSolver::optimize(Molecule &mol, FockOperator &F) {
             dV_n.back().QMFunction::operator=(diff_func);
 
             // Employ KAIN accelerator
-            helper->getKain().accelerate(orb_prec / 100, V_n, dV_n);
+            std::cout << __func__ << " this is where my KAIN starts\n";
+            helper->getKain().accelerate(orb_prec, V_n, dV_n);
+            std::cout << __func__ << " this is where my KAIN ends\n";
 
             V_r.QMFunction::operator=(V_n.back());
             V_n.pop_back();

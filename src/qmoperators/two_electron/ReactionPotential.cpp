@@ -47,10 +47,6 @@ void ReactionPotential::accelerateConvergence(QMFunction &diff_func, QMFunction 
 void ReactionPotential::setup(double prec) {
     setApplyPrec(prec);
 
-    if (this->run_once) {
-        this->run_once = false;
-        return;
-    }
     QMFunction &temp = *this;
 
     // Solve the poisson equation
@@ -62,13 +58,22 @@ void ReactionPotential::setup(double prec) {
     QMFunction V_n;
     QMFunction dV_n;
     QMFunction poisson_func;
-    if (this->variational) {
+    if (this->variational || this->run_once) {
+        this->run_once = false;
         V_n.alloc(NUMBER::Real);
         qmfunction::add(poisson_func, 1.0, gamma, 1.0, rho_eff, -1.0);
         mrcpp::apply(this->apply_prec, V_n.real(), *poisson, poisson_func.real());
         qmfunction::add(dV_n, 1.0, V_n, -1.0, V_nm1, -1.0);
 
-        print_utils::text(0, " error           ", print_utils::dbl_to_str(dV_n.norm(), 5, true));
+        QMFunction residual;
+        QMFunction epsilon;
+        epsilon.alloc(NUMBER::Real);
+        residual.alloc(NUMBER::Real);
+        this->helper->epsilon.flipFunction(false);
+        qmfunction::project(epsilon, this->helper->epsilon, NUMBER::Real, this->apply_prec / 100);
+        qmfunction::multiply(residual, dV_n, epsilon, this->apply_prec);
+
+        print_utils::text(0, "Residual", print_utils::dbl_to_str(residual.norm(), 5, true));
     } else {
         print_utils::headline(0, "Calculating Reaction Potential");
         QMFunction V_tot;
