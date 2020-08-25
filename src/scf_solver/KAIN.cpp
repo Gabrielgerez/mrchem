@@ -149,8 +149,7 @@ void KAIN::expandSolution(double prec, OrbitalVector &Phi, OrbitalVector &dPhi, 
     int nHistory = this->orbitals.size() - 1;
     int nOrbitals = this->orbitals[nHistory].size();
 
-    // Orbitals are unchanged, updates will change
-    Phi = orbital::deep_copy(this->orbitals[nHistory]);
+    // Orbitals are unchanged, updates are overwritten
     dPhi = orbital::param_copy(this->dOrbitals[nHistory]);
 
     int m = 0;
@@ -225,7 +224,7 @@ void KAIN::expandSolution(double prec, OrbitalVector &Phi, OrbitalVector &dPhi, 
             tmpX *= this->c[m - 1](j);
             fockStep += tmpX;
         }
-        *F = X_m;
+        // F is unchanged, dF is overwritten
         *dF = fockStep;
     }
     mrcpp::print::time(2, "Expand solution", t_tot);
