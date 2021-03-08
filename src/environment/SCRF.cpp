@@ -243,7 +243,8 @@ QMFunction &SCRF::setup(double prec, const OrbitalVector_p &Phi) {
         temp_gamma_n.free(NUMBER::Real);
     }
 
-    if (this->algorithm == "scrf") { nestedSCRF(V_vac); }
+    if (this->algorithm == "scrf") { nestedSCRF(V_vac);
+    }else if (this->algorithm == "sqrteps") {/* Do something*/}
     return this->Vr_n;
 }
 
