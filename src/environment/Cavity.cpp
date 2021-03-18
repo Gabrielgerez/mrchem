@@ -2,7 +2,7 @@
  * MRChem, a numerical real-space code for molecular electronic structure
  * calculations within the self-consistent field (SCF) approximations of quantum
  * chemistry (Hartree-Fock and Density Functional Theory).
- * Copyright (C) 2020 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
+ * Copyright (C) 2021 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
  *
  * This file is part of MRChem.
  *
@@ -24,7 +24,6 @@
  */
 #include "Cavity.h"
 #include "utils/math_utils.h"
-
 namespace mrchem {
 
 /** @brief Initializes the members of the class and constructs the analytical gradient vector of the Cavity. */
@@ -57,45 +56,136 @@ Cavity::Cavity(std::vector<mrcpp::Coord<3>> &centers, std::vector<double> &radii
  *   @param width A double value describing the width of the transition at the boundary of the spheres.
  *   @return A double number which represents the value of the differential (w.r.t. x, y or z) at point r.
  */
-auto gradCavity(const mrcpp::Coord<3> &r,
-                int index,
-                const std::vector<mrcpp::Coord<3>> &centers,
-                std::vector<double> &radii,
-                double width) -> double {
-    double C = 1.0;
-    double DC = 0.0;
-    for (int i = 0; i < centers.size(); i++) {
-        double s = math_utils::calc_distance(centers[i], r) - radii[i];
-        double ds = (r[index] - centers[i][index]) / (math_utils::calc_distance(centers[i], r));
-        double Theta = 0.5 * (1 + std::erf(s / width));
-        double Ci = 1.0 - Theta;
-        C *= 1.0 - Ci;
 
-        double DCi = -(1.0 / (width * std::sqrt(MATHCONST::pi))) * std::exp(-std::pow(s / width, 2.0)) * ds;
+auto ddCavity(const mrcpp::Coord<3> &r,
+              int index,
+              const std::vector<mrcpp::Coord<3>> &centers,
+              std::vector<double> &radii,
+              double width) -> double {
 
-        double numerator = DCi;
-        double denominator = 1.0 - Ci;
-
-        if (((1.0 - Ci) < 1.0e-12) and ((1.0 - Ci) >= 0)) {
-            denominator = 1.0e-12;
-        } else if (((1.0 - Ci) > -1.0e-12) and ((1.0 - Ci) <= 0)) {
-            denominator = -1.0e-12;
+    auto s_i = [centers, radii](const mrcpp::Coord<3> r, int i) -> double {
+        return math_utils::calc_distance(centers[i], r) - radii[i];
+    };
+    auto C_i = [s_i, width](const mrcpp::Coord<3> r, int i) -> double {
+        return 1.0 - 0.5 * (1 + std::erf(s_i(r, i) / width));
+    };
+    auto C = [C_i, centers](const mrcpp::Coord<3> r) -> double {
+        double c = 1.0;
+        for (int i = 0; i < centers.size(); i++) { c *= 1.0 - C_i(r, i); }
+        return 1.0 - c;
+    };
+    auto ds_i = [s_i, index, radii, centers](const mrcpp::Coord<3> r, int i) -> double {
+        return (r[index] - centers[i][index]) / (s_i(r, i) + radii[i]);
+    };
+    auto dC_i = [s_i, ds_i, width](const mrcpp::Coord<3> r, int i) -> double {
+        return -std::exp(-std::pow(s_i(r, i) / width, 2)) * (ds_i(r, i)) / (std::sqrt(MATHCONST::pi) * width);
+    };
+    auto dC = [C, C_i, dC_i, centers](const mrcpp::Coord<3> r) -> double {
+        double S = 0.0;
+        for (int i = 0; i < centers.size(); i++) {
+            double numerator = ((dC_i(r, i) < 1.0e-12) and (dC_i(r, i) >= 0.0))
+                                   ? 1.0e-12
+                                   : ((dC_i(r, i) > 1.0e-12) and (dC_i(r, i) <= 0.0)) ? -1.0e-12 : dC_i(r, i);
+            double denominator =
+                (((1.0 - C_i(r, i)) < 1.0e-12) and ((1.0 - C_i(r, i)) >= 0.0))
+                    ? 1.0e-12
+                    : (((1.0 - C_i(r, i)) > 1.0e-12) and ((1.0 - C_i(r, i)) <= 0.0)) ? -1.0e-12 : (1.0 - C_i(r, i));
+            // please make this into and abs(denominator - 1.0e-12) thing
+            S += numerator / denominator;
         }
+        return (1 - C(r)) * S;
+    };
+    auto dds_i = [index, centers, s_i, radii](const mrcpp::Coord<3> r, int i) -> double {
+        return -std::pow((r[index] - centers[i][index]), 2) / std::pow((s_i(r, i) + radii[i]), 3.0) +
+               1 / (s_i(r, i) + radii[i]);
+    };
+    auto ddC_i = [index, width, s_i, ds_i, dds_i](const mrcpp::Coord<3> r, int i) -> double {
+        return -std::exp(-std::pow(s_i(r, i) / width, 2)) * dds_i(r, i) / (std::sqrt(MATHCONST::pi) * width) +
+               2.0 * s_i(r, i) * std::exp(-std::pow(s_i(r, i) / width, 2)) * std::pow(ds_i(r, i), 2) /
+                   (std::sqrt(MATHCONST::pi) * std::pow(width, 3));
+    };
+    auto ddC = [centers, C, C_i, dC_i, ddC_i](const mrcpp::Coord<3> r) -> double {
+        double S1 = 0.0;
+        double S2 = 0.0;
+        for (int i = 0; i < centers.size(); i++) {
+            double DCi = ((dC_i(r, i) < 1.0e-12) and (dC_i(r, i) >= 0.0))
+                             ? 1.0e-12
+                             : ((dC_i(r, i) > 1.0e-12) and (dC_i(r, i) <= 0.0)) ? -1.0e-12 : dC_i(r, i);
+            double DDCi = ((ddC_i(r, i) < 1.0e-12) and (ddC_i(r, i) >= 0.0))
+                              ? 1.0e-12
+                              : ((ddC_i(r, i) > 1.0e-12) and (ddC_i(r, i) <= 0.0)) ? -1.0e-12 : ddC_i(r, i);
+            double denominator =
+                (((1.0 - C_i(r, i)) < 1.0e-12) and ((1.0 - C_i(r, i)) >= 0.0))
+                    ? 1.0e-12
+                    : (((1.0 - C_i(r, i)) > 1.0e-12) and ((1.0 - C_i(r, i)) <= 0.0)) ? -1.0e-12 : (1.0 - C_i(r, i));
 
-        if ((DCi < 1.0e-12) and (DCi >= 0)) {
-            numerator = 1.0e-12;
-        } else if ((DCi > -1.0e-12) and (DCi <= 0)) {
-            numerator = -1.0e-12;
+            S1 += DCi / denominator; // need to square this one after wards
+            S2 += (DDCi / denominator) + std::pow(DCi / denominator, 2);
         }
-        DC += numerator / denominator;
-    }
-    DC = C * DC;
-    return DC;
+        return -(1 - C(r)) * std::pow(S1, 2) + (1 - C(r)) * S2;
+    };
+    return ddC(r);
+}
+
+auto dCavity(const mrcpp::Coord<3> &r,
+             int index,
+             const std::vector<mrcpp::Coord<3>> &centers,
+             std::vector<double> &radii,
+             double width) -> double {
+    auto s_i = [centers, radii](const mrcpp::Coord<3> r, int i) -> double {
+        return math_utils::calc_distance(centers[i], r) - radii[i];
+    };
+    auto C_i = [s_i, width](const mrcpp::Coord<3> r, int i) -> double {
+        return 1.0 - 0.5 * (1 + std::erf(s_i(r, i) / width));
+    };
+    auto C = [C_i, centers](const mrcpp::Coord<3> r) -> double {
+        double c = 1.0;
+        for (int i = 0; i < centers.size(); i++) { c *= 1.0 - C_i(r, i); }
+        return 1.0 - c;
+    };
+    auto ds_i = [s_i, index, radii, centers](const mrcpp::Coord<3> r, int i) -> double {
+        return (r[index] - centers[i][index]) / (s_i(r, i) + radii[i]);
+    };
+    auto dC_i = [s_i, ds_i, width](const mrcpp::Coord<3> r, int i) -> double {
+        return -1.0 * std::exp(-std::pow(s_i(r, i) / width, 2)) * (ds_i(r, i)) / (sqrt(MATHCONST::pi) * width);
+    };
+    auto dC = [C, C_i, dC_i, centers](const mrcpp::Coord<3> r) -> double {
+        double S = 0.0;
+        for (int i = 0; i < centers.size(); i++) {
+            double numerator = ((dC_i(r, i) < 1.0e-12) and (dC_i(r, i) >= 0.0))
+                                   ? 1.0e-12
+                                   : ((dC_i(r, i) > 1.0e-12) and (dC_i(r, i) <= 0.0)) ? -1.0e-12 : dC_i(r, i);
+            double denominator =
+                (((1.0 - C_i(r, i)) < 1.0e-12) and ((1.0 - C_i(r, i)) >= 0.0))
+                    ? 1.0e-12
+                    : (((1.0 - C_i(r, i)) > 1.0e-12) and ((1.0 - C_i(r, i)) <= 0.0)) ? -1.0e-12 : (1.0 - C_i(r, i));
+            S += numerator / denominator;
+        }
+        return (1 - C(r)) * S;
+    };
+    return dC(r);
+    /*    double C = 1.0;
+double DC = 0.0;
+for (int i = 0; i < centers.size(); i++) {
+double s = math_utils::calc_distance(centers[i], r) - radii[i];
+double ds = (r[index] - centers[i][index]) / (math_utils::calc_distance(centers[i], r));
+double Theta = 0.5 * (1 + std::erf(s / width));
+double Ci = 1.0 - Theta;
+C *= 1.0 - Ci;
+
+double DCi = -(1.0 / (width * std::sqrt(MATHCONST::pi))) * std::exp(-std::pow(s / width, 2.0)) * ds;
+
+double numerator = ((DCi < 1.0e-12) and (DCi >= 0.0)) ? 1.0e-12 : ((DCi > 1.0e-12) and (DCi <= 0.0)) ? -1.0e-12  : DCi;
+double denominator = (((1.0 - Ci) < 1.0e-12) and ((1.0 - Ci) >= 0.0)) ? 1.0e-12 : (((1.0 - Ci) > 1.0e-12) and ((1.0 -
+Ci) <= 0.0)) ? -1.0e-12 : (1.0 - Ci); DC += numerator / denominator;
+}
+DC = C * DC;
+return DC;*/
 }
 /** @brief Sets the different partial derivatives in the \link #gradvector gradient \endlink of the Cavity. */
 void Cavity::setGradVector() {
     auto p_gradcavity = [this](const mrcpp::Coord<3> &r, int index) {
-        return gradCavity(r, index, centers, radii, width);
+        return dCavity(r, index, centers, radii, width);
     };
     for (auto i = 0; i < 3; i++) {
         this->gradvector.push_back(
