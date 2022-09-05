@@ -29,68 +29,36 @@ from json import dump
 from .input_parser.plumbing import pyparsing as pp
 
 global pc
+global world_unit
+
+
+def make_cube_vector(file_key, file_val, vector_dir):
+    data_type = "_".join(file_key.split("_")[2:])
+    path_list = sort_paths(file_val)
+    cube_list = []
+    
+    if not os.path.isdir(vector_dir):
+        os.mkdir(vector_dir)
+
+    if len(path_list) != 0:
+        for path in path_list:
+            cube_list.append(parse_cube_file(path, world_unit))
+    
+    cube_list = sorted(cube_list, key=lambda d: d["FUNC_IDS"])
+    with open(f"{vector_dir}CUBE_{data_type}_vector.json", "w") as fd:
+        dump(cube_list, fd, indent=2)
+
 
 
 def write_cube_dict(user_dict):
     file_dict = user_dict["Files"]
     world_unit = user_dict["world_unit"]
     pc = user_dict["Constants"]
-
-    all_path_list = []
-    all_path_list.append(sort_paths(file_dict["guess_cube_p"]))
-    all_path_list.append(sort_paths(file_dict["guess_cube_a"]))
-    all_path_list.append(sort_paths(file_dict["guess_cube_b"]))
-    all_path_list.append(sort_paths(file_dict["guess_cube_x_p"]))
-    all_path_list.append(sort_paths(file_dict["guess_cube_x_a"]))
-    all_path_list.append(sort_paths(file_dict["guess_cube_x_b"]))
-    all_path_list.append(sort_paths(file_dict["guess_cube_y_p"]))
-    all_path_list.append(sort_paths(file_dict["guess_cube_y_a"]))
-    all_path_list.append(sort_paths(file_dict["guess_cube_y_b"]))
-    all_cube_list = []
-    for path_list in all_path_list:
-        cube_list = []
-        if len(path_list) != 0:
-            for path in path_list:
-                cube_list.append(parse_cube_file(path, world_unit))
-        all_cube_list.append(cube_list)
-
     vector_dir = file_dict["cube_vectors"]
-
-    # This is becoming silly
-    #TODO PLEASE translate this to loops
-    for index, x_list in enumerate(all_cube_list):
-        sorted_list = sorted(x_list, key=lambda d: d["ORB_IDS"])
-        all_cube_list[index] = sorted_list
-
-    if not os.path.isdir(vector_dir):
-        os.mkdir(vector_dir)
-
-    with open(f"{vector_dir}CUBE_p_vector.json", "w") as fd:
-        dump(all_cube_list[0], fd, indent=2)
-
-    with open(f"{vector_dir}CUBE_a_vector.json", "w") as fd:
-        dump(all_cube_list[1], fd, indent=2)
-
-    with open(f"{vector_dir}CUBE_b_vector.json", "w") as fd:
-        dump(all_cube_list[2], fd, indent=2)
-
-    with open(f"{vector_dir}CUBE_x_p_vector.json", "w") as fd:
-        dump(all_cube_list[3], fd, indent=2)
-
-    with open(f"{vector_dir}CUBE_x_a_vector.json", "w") as fd:
-        dump(all_cube_list[4], fd, indent=2)
-
-    with open(f"{vector_dir}CUBE_x_b_vector.json", "w") as fd:
-        dump(all_cube_list[5], fd, indent=2)
-
-    with open(f"{vector_dir}CUBE_y_p_vector.json", "w") as fd:
-        dump(all_cube_list[6], fd, indent=2)
-
-    with open(f"{vector_dir}CUBE_y_a_vector.json", "w") as fd:
-        dump(all_cube_list[7], fd, indent=2)
-
-    with open(f"{vector_dir}CUBE_y_b_vector.json", "w") as fd:
-        dump(all_cube_list[8], fd, indent=2)
+    
+    for key, val in file_dict.items():
+        if ("cube" in key):
+            make_cube_vector(key, val, vector_dir)
 
 
 def sort_paths(path):
@@ -209,14 +177,14 @@ def parse_cube_file(cube_path, world_unit):
 
     all_data_list = []
 
-    # parse through a list of lines where the header has been removed, but the ORB_IDS remain, and append each value in a new all_data_list.
+    # parse through a list of lines where the header has been removed, but the FUNC_IDS remain, and append each value in a new all_data_list.
     for line in cube_s[(4 + abs(parsed_cube["NATOMS"])) :]:
         all_data_list.extend(line.split())
 
     if len(parsed_cube["DSET_IDS"]) != 0:
         voxel_list = all_data_list[
             (len(parsed_cube["DSET_IDS"]) + 1) :
-        ]  # remove ORB_IDS from the all_data_list
+        ]  # remove FUNC_IDS from the all_data_list
     else:
         voxel_list = all_data_list
 
@@ -243,15 +211,15 @@ def parse_cube_file(cube_path, world_unit):
     path_ids = cube_path.split("/")[-1].split("_")[4]
     if "-" in path_ids:
         from_to = path_ids.split("-")
-        orb_ids = list(
+        func_ids = list(
             range(from_to[0], (from_to[1] + 1), 1)
         )  # we work as including the from and to, so 4-7 includes 4, 5, 6 and 7.
-        if N_vals != len(orb_ids):
+        if N_vals != len(func_ids):
             raise ValueError(
                 "Different amount of orbitals in file and amount of orbitals specified in file name."
             )
     else:
-        orb_ids = [float(path_ids)]
+        func_ids = [float(path_ids)]
 
     # get voxel axis data to construct a basis for the cube space.
     N_steps = [
@@ -313,7 +281,7 @@ def parse_cube_file(cube_path, world_unit):
             "atom_coords": atom_coords,
             "N_vals": N_vals,
         },
-        "ORB_IDS": orb_ids,
+        "FUNC_IDS": func_ids,
         "CUBE_data": CUBE_vector,
     }
     return cube_dict

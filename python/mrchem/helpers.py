@@ -285,7 +285,7 @@ def write_rsp_calc(omega, user_dict, origin):
     if guess_type == 'chk':
         guess_prec = user_dict['world_prec']
     elif (guess_type == 'cube'):
-        write_cube_dict(file_dict, user_dict["world_unit"])
+        write_cube_dict(user_dict)
 
     vector_dir = file_dict["cube_vectors"]
 
@@ -308,7 +308,9 @@ def write_rsp_calc(omega, user_dict, origin):
             "file_CUBE_x_b": f"{vector_dir}CUBE_x_b_vector.json",
             "file_CUBE_y_p": f"{vector_dir}CUBE_y_p_vector.json",
             "file_CUBE_y_a": f"{vector_dir}CUBE_y_a_vector.json",
-            "file_CUBE_y_b": f"{vector_dir}CUBE_y_b_vector.json"
+            "file_CUBE_y_b": f"{vector_dir}CUBE_y_b_vector.json",
+            "file_CUBE_rho_0": f"{vector_dir}CUBE_rho_0_vector.json",
+            "file_CUBE_rho_1": f"{vector_dir}CUBE_rho_1_vector.json"
         }
         if rsp_dict["write_orbitals"]:
             path_orbitals = rsp_dict["path_orbitals"]

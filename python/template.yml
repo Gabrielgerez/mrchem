@@ -555,6 +555,18 @@ sections:
         docstring: |
           File name for beta orbitals, used with ``cube`` guess.
           Expected path is ``<path_orbitals>/y_b_rsp_idx_<0...Nb>_<re/im>.cube
+      - name: guess_cube_rho_0
+        type: str
+        default: "initial_guess/rho_0"
+        docstring: |
+          File prefix for ground state density, used with ``cube``guess.
+          Expected path is ``<dirpath>/rho_0_scf_<re/im>.cube``
+      - name: guess_cube_rho_1
+        type: str
+        default: "initial_guess/rho_1"
+        docstring: |
+          File prefix for perturbed density, used with ``cube``guess.
+          Expected path is ``<dirpath>/rho_0_scf_<re/im>.cube``
       - name: cube_vectors
         type: str
         default: cube_vectors/
@@ -631,7 +643,7 @@ sections:
         default: sad_gto
         predicates:
           - value.lower() in ['mw', 'chk', 'gto', 'core_sz', 'core_dz', 'core_tz',
-            'core_qz', 'sad_sz', 'sad_dz', 'sad_tz', 'sad_qz', 'sad_gto', 'cube']
+            'core_qz', 'sad_sz', 'sad_dz', 'sad_tz', 'sad_qz', 'sad_gto', 'cube_phi', 'cube_rho']
         docstring: |
           Type of initial guess for ground state orbitals.
           ``chk`` restarts a previous calculation which was dumped using the
@@ -739,11 +751,13 @@ sections:
         type: str
         default: none
         predicates:
+          - value.lower() in ['none', 'chk', 'mw']
           - "value.lower() in
             ['none',
              'chk',
              'mw',
-             'cube']"
+             'cube_phi',
+             'cube_rho']"
         docstring: |
           Type of initial guess for response.
           ``none`` will start from a zero guess for the response functions.
