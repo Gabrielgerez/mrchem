@@ -33,7 +33,6 @@
 #include "chemistry/Molecule.h"
 #include "qmfunctions/Orbital.h"
 #include "qmfunctions/orbital_utils.h"
-#include "qmoperators/two_electron/FockOperator.h"
 #include "utils/print_utils.h"
 
 using mrcpp::Printer;
@@ -63,7 +62,7 @@ namespace mrchem {
 
 double HigherResponseSolver::computeOmega(OrbitalVector &Phi_0, OrbitalVector &X_n, OrbitalVector &Y_n, RankZeroOperator &V_0, RankZeroOperator &V_1) {
     Timer t_tot;
-}
+}   
 
 json HigherResponseSolver::optimize(double omega, Molecule &mol, FockOperator &F_0, FockOperator &F_1) {
     printParameters(omega, F_1.perturbation().name());
