@@ -43,6 +43,7 @@ mrcpp::ComplexFunction &ReactionPotentialD1::computePotential(double prec) const
     OrbitalVector &Phi = *this->orbitals;
     Density rho_el(false);
     density::compute(this->apply_prec, rho_el, Phi, DensityType::Total);
+    std::cout << "rho_el nodesize: " << rho_el.getSizeNodes(NUMBER::Real) << std::endl;
     // change sign, because it's the electronic density
     rho_el.rescale(-1.0);
 

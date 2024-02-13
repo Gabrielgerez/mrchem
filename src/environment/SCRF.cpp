@@ -179,6 +179,7 @@ void SCRF::nestedSCRF(const mrcpp::ComplexFunction &V_vac, const Density &rho_el
         computeGamma(V_tot, gamma_n);
         auto Vr_np1 = solvePoissonEquation(gamma_n, rho_el);
         norm = Vr_np1.norm();
+        std::cout << "Vr_np1 nodesize: " << Vr_np1.getSizeNodes(NUMBER::Real) << std::endl;
 
         // use a convergence accelerator
 
@@ -233,10 +234,12 @@ mrcpp::ComplexFunction &SCRF::setup(double prec, const Density &rho_el) {
     this->apply_prec = prec;
     Density rho_tot(false);
     computeDensities(rho_el, rho_tot);
+    std::cout << "rho_tot nodesize: " << rho_tot.getSizeNodes(NUMBER::Real) << std::endl;
     Timer t_vac;
     mrcpp::ComplexFunction V_vac;
     V_vac.alloc(NUMBER::Real);
     mrcpp::apply(this->apply_prec, V_vac.real(), *poisson, rho_tot.real());
+    std::cout << "V_vac nodesize: " << V_vac.getSizeNodes(NUMBER::Real) << std::endl;
     rho_tot.free(NUMBER::Real);
     print_utils::qmfunction(3, "Vacuum potential", V_vac, t_vac);
 
