@@ -58,7 +58,6 @@ PBESolver::PBESolver(const Permittivity &e,
         , kappa(k) {}
 
 PBESolver::~PBESolver() {
-    this->rho_nuc.free();
     clear();
 }
 
