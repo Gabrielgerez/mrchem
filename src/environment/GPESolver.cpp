@@ -186,13 +186,15 @@ void GPESolver::runMicroIterations(const mrcpp::CompFunction<3> &V_vac, const De
 
         if (iter > 1 and this->history > 0) {
             accelerateConvergence(dVr_n, Vr_n, kain);
-            // KAIN's expandSolution only runs on the rank that owns the function
-            // (rank 0, set via setRank(0) in accelerateConvergence). Broadcast the
-            // updated step to all worker ranks before using it to build Vr_np1,
-            // otherwise ranks 1+ carry a stale dVr_n and diverge from rank 0.
-            mrcpp::mpi::broadcast_function(dVr_n, mrcpp::mpi::comm_wrk);
+            // After KAIN, dVr_n is valid only on rank 0: expandSolution is guarded by
+            // my_func (rank 0 only), and param_copy leaves Ncomp=1 but CompD[0]=nullptr
+            // on other ranks, making recv_function unable to allocate correctly if we
+            // tried to broadcast dVr_n directly. Compute Vr_np1 on rank 0 only, then
+            // broadcast the result (Vr_np1 is freed first so recv_function sees Ncomp=0
+            // and allocates fresh trees before receiving).
             Vr_np1.free();
-            mrcpp::add(Vr_np1, 1.0, Vr_n, 1.0, dVr_n, -1.0);
+            if (mrcpp::mpi::wrk_rank == 0) mrcpp::add(Vr_np1, 1.0, Vr_n, 1.0, dVr_n, -1.0);
+            mrcpp::mpi::broadcast_function(Vr_np1, mrcpp::mpi::comm_wrk);
         }
 
         // set up for next iteration
